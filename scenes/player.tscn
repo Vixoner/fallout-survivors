@@ -16,3 +16,12 @@ texture = ExtResource("1_3vyb7")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D" unique_id=2063134966]
 shape = SubResource("RectangleShape2D_g2els")
+
+[node name="Camera2D" type="Camera2D" parent="CharacterBody2D" unique_id=2105558725]
+limit_left = -1500
+limit_top = -1000
+limit_right = 1500
+limit_bottom = 1000
+limit_smoothed = true
+position_smoothing_enabled = true
+position_smoothing_speed = 10.0

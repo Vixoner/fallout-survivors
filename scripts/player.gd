@@ -1,6 +1,9 @@
 extends CharacterBody2D
 
 const SPEED = 500.0
+const MAP_WIDTH = 3000
+const MAP_HEIGHT = 2000
+const PLAYER_SIZE = 64
 
 func _physics_process(delta):
 	var direction = Vector2.ZERO
@@ -20,3 +23,6 @@ func _physics_process(delta):
 	
 	velocity = direction * SPEED
 	move_and_slide()
+	
+	position.x = clamp(position.x, -MAP_WIDTH / 2 + PLAYER_SIZE, MAP_WIDTH / 2 - PLAYER_SIZE)
+	position.y = clamp(position.y, -MAP_HEIGHT / 2 + PLAYER_SIZE, MAP_HEIGHT / 2 - PLAYER_SIZE)
