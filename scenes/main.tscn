@@ -1,9 +1,11 @@
 [gd_scene format=3 uid="uid://rhogf3j1vlo0"]
 
 [ext_resource type="Texture2D" uid="uid://c7j0r66deob5h" path="res://assets/sprites/450.png" id="1_o5qli"]
+[ext_resource type="Script" uid="uid://car5s1il0ucy1" path="res://scripts/main.gd" id="1_sugp2"]
 [ext_resource type="PackedScene" uid="uid://d3msx4t4u7728" path="res://scenes/player.tscn" id="2_0wfyh"]
 
 [node name="Main" type="Node2D" unique_id=711233798]
+script = ExtResource("1_sugp2")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=979870751]
 texture_repeat = 2
