@@ -34,6 +34,6 @@ func _on_body_entered(body):
 		_collect()
 
 func _collect():
-	# tu dodać logike zbierania w przyszlosci
-	print("Zebrano kapsel! Wartość: ", value)
+	if _player.has_method("add_caps"):
+		_player.add_caps(value)
 	queue_free()

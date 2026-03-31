@@ -5,6 +5,8 @@ const MAP_WIDTH = 3000
 const MAP_HEIGHT = 2000
 const PLAYER_SIZE = 64
 
+var caps: int = 0
+
 func _physics_process(delta):
 	var direction = Vector2.ZERO
 	
@@ -58,3 +60,10 @@ func attack_enemy(target):
 	print("Atakuję: ", target.name)
 	target.take_damage(50)
 	# Tutaj możesz dodać animację pocisku lub błysk
+	
+func add_caps(amount: int):
+	caps += amount
+	# Update label'a
+	var label = get_tree().get_first_node_in_group("caps_label")
+	if label:
+		label.text = "Kapsle: " + str(caps)

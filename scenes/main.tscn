@@ -15,3 +15,14 @@ region_enabled = true
 region_rect = Rect2(0, 0, 15000, 10000)
 
 [node name="Player" parent="." unique_id=447343164 instance=ExtResource("2_0wfyh")]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1618314074]
+follow_viewport_scale = 10.259
+
+[node name="CapsLabel" type="Label" parent="CanvasLayer" unique_id=910706101 groups=["caps_label"]]
+offset_left = 46.0
+offset_top = 49.0
+offset_right = 355.0
+offset_bottom = 163.0
+theme_override_font_sizes/font_size = 32
+text = "Kapsle: 0"
