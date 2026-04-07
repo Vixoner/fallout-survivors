@@ -1,22 +1,23 @@
 extends CharacterBody2D
 
 const SPEED = 500.0
-const MAP_WIDTH = 3000
-const MAP_HEIGHT = 2000
 const PLAYER_SIZE = 64
+
+func _ready():
+	z_index = 2
 
 var caps: int = 0
 
 func _physics_process(delta):
 	var direction = Vector2.ZERO
 	
-	if Input.is_action_pressed("ui_right"):
+	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
 		direction.x += 1
-	if Input.is_action_pressed("ui_left"):
+	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
 		direction.x -= 1
-	if Input.is_action_pressed("ui_down"):
+	if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
 		direction.y += 1
-	if Input.is_action_pressed("ui_up"):
+	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
 		direction.y -= 1
 	
 	# Normalizacja żeby ukosem nie szło szybciej
@@ -26,8 +27,8 @@ func _physics_process(delta):
 	velocity = direction * SPEED
 	move_and_slide()
 	
-	position.x = clamp(position.x, -MAP_WIDTH / 2 + PLAYER_SIZE, MAP_WIDTH / 2 - PLAYER_SIZE)
-	position.y = clamp(position.y, -MAP_HEIGHT / 2 + PLAYER_SIZE, MAP_HEIGHT / 2 - PLAYER_SIZE)
+	position.x = clamp(position.x, -GameConstants.MAP_WIDTH / 2 + PLAYER_SIZE, GameConstants.MAP_WIDTH / 2 - PLAYER_SIZE)
+	position.y = clamp(position.y, -GameConstants.MAP_HEIGHT / 2 + PLAYER_SIZE, GameConstants.MAP_HEIGHT / 2 - PLAYER_SIZE)
 	time_since_last_attack += delta
 	if time_since_last_attack >= attack_cooldown:
 		var target = get_nearest_enemy()
@@ -36,9 +37,8 @@ func _physics_process(delta):
 			time_since_last_attack = 0.0
 	
 @onready var attack_range = $AttackRange # Ścieżka do Twojego Area2D
-var attack_cooldown = 0.5 # Sekundy między atakami
+var attack_cooldown = 0.25 # Sekundy między atakami
 var time_since_last_attack = 0.0
-
 
 func get_nearest_enemy():
 	var enemies = attack_range.get_overlapping_bodies()
@@ -58,7 +58,7 @@ func get_nearest_enemy():
 func attack_enemy(target):
 	# Prosty efekt: "strzał" w konsoli i zadanie obrażeń
 	print("Atakuję: ", target.name)
-	target.take_damage(50)
+	target.take_damage(40)
 	# Tutaj możesz dodać animację pocisku lub błysk
 	
 func add_caps(amount: int):
