@@ -18,6 +18,7 @@ var _trail_positions: Array = []
 
 func _ready():
 	z_index = 1
+	add_to_group("caps")
 	_player = get_tree().get_first_node_in_group("player")
 	body_entered.connect(_on_body_entered)
 	_setup_trail()

@@ -7,10 +7,24 @@ func _ready():
 	z_index = 2
 
 var caps: int = 0
+var movement_blocked: bool = false
+
+# Statystyki SPECIAL
+var strength: int = 5
+var perception: int = 5
+var endurance: int = 5
+var charisma: int = 5
+var intelligence: int = 5
+var agility: int = 5
+var luck: int = 5
 
 func _physics_process(delta):
+	if movement_blocked:
+		velocity = Vector2.ZERO
+		return
+
 	var direction = Vector2.ZERO
-	
+
 	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
 		direction.x += 1
 	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):

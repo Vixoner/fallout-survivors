@@ -2,6 +2,7 @@ extends Node2D
 
 const CAP_SCENE = preload("res://scenes/cap.tscn")
 const ENEMY_SCENE = preload("res://scenes/enemy.tscn")
+const SHOP_SCRIPT = preload("res://scripts/shop.gd")
 
 const SPAWN_MIN_DIST = 700.0
 const SPAWN_MAX_DIST = 1100.0
@@ -27,6 +28,7 @@ var wave_active: bool = false
 var player: Node2D = null
 
 func _ready():
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	player = get_tree().get_first_node_in_group("player")
 	start_wave(0)
 
@@ -105,11 +107,18 @@ func check_wave_complete():
 		wave_active = false
 		print(">>> Fala ", current_wave + 1, " zakończona!")
 		if current_wave + 1 < WAVES.size():
-			await get_tree().create_timer(3.0).timeout
-			start_wave(current_wave + 1)
+			await get_tree().create_timer(1.2).timeout
+			show_shop()
 		else:
 			print(">>> Wszystkie fale ukończone! Wygrałeś!")
 			update_wave_label(true)
+
+func show_shop():
+	var shop = SHOP_SCRIPT.new()
+	shop.setup(player)
+	add_child(shop)
+	await shop.shop_closed
+	start_wave(current_wave + 1)
 
 func update_wave_label(finished: bool = false):
 	var label = get_tree().get_first_node_in_group("wave_label")
