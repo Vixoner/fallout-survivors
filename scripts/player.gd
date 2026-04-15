@@ -3,11 +3,22 @@ extends CharacterBody2D
 const SPEED = 500.0
 const PLAYER_SIZE = 64
 
-func _ready():
-	z_index = 2
+@onready var attack_range = $AttackRange
+@onready var body_sprite = $BodySprite
+@onready var weapon_sprite = $WeaponSprite
+@onready var animation_player = $AnimationPlayer
+@onready var weapon_anim_player = $WeaponAnimationPlayer
 
 var caps: int = 0
 var movement_blocked: bool = false
+var attack_cooldown = 0.25 
+
+#var time_since_last_attack = 0.0 Narazie zbędne, jak dodamy więcej broni to wróci
+#var current_weapon: String = "none"
+var knife_cooldown = 0.5 
+var knife_timer = 0.0
+
+var last_direction = "down" 
 
 # Statystyki SPECIAL
 var strength: int = 5
@@ -18,9 +29,13 @@ var intelligence: int = 5
 var agility: int = 5
 var luck: int = 5
 
+func _ready():
+	z_index = 2
+
 func _physics_process(delta):
 	if movement_blocked:
 		velocity = Vector2.ZERO
+		play_idle_animation()
 		return
 
 	var direction = Vector2.ZERO
@@ -34,25 +49,78 @@ func _physics_process(delta):
 	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
 		direction.y -= 1
 	
-	# Normalizacja żeby ukosem nie szło szybciej
 	if direction != Vector2.ZERO:
 		direction = direction.normalized()
-	
+		update_animation_and_direction(direction)
+	else:
+		play_idle_animation()
+		
 	velocity = direction * SPEED
 	move_and_slide()
 	
 	position.x = clamp(position.x, -GameConstants.MAP_WIDTH / 2 + PLAYER_SIZE, GameConstants.MAP_WIDTH / 2 - PLAYER_SIZE)
 	position.y = clamp(position.y, -GameConstants.MAP_HEIGHT / 2 + PLAYER_SIZE, GameConstants.MAP_HEIGHT / 2 - PLAYER_SIZE)
-	time_since_last_attack += delta
-	if time_since_last_attack >= attack_cooldown:
+	
+	
+	handle_knife_autoattack(delta)
+	#time_since_last_attack += delta
+	#if time_since_last_attack >= attack_cooldown:
+	#	var target = get_nearest_enemy()
+	#	if target:
+	#		attack_enemy(target)
+	#		time_since_last_attack = 0.0
+func handle_knife_autoattack(delta):
+	knife_timer += delta
+	if knife_timer >= knife_cooldown:
 		var target = get_nearest_enemy()
 		if target:
-			attack_enemy(target)
-			time_since_last_attack = 0.0
-	
-@onready var attack_range = $AttackRange # Ścieżka do Twojego Area2D
-var attack_cooldown = 0.25 # Sekundy między atakami
-var time_since_last_attack = 0.0
+			var attack_direction = global_position.direction_to(target.global_position)
+			
+			# Odpalamy animację noża
+			play_knife_animation(attack_direction)
+			
+			# Zadajemy obrażenia
+			target.take_damage(40)
+			print("Auto-dźgnięcie: ", target.name)
+			
+			# Resetujemy tylko stoper noża
+			knife_timer = 0.0
+
+# Zmiana nazwy funkcji dla porządku
+func play_knife_animation(direction: Vector2):
+	if abs(direction.y) > abs(direction.x):
+		if direction.y > 0:
+			weapon_anim_player.play("bat_attack_down")
+		else:
+			weapon_anim_player.play("bat_attack_up")
+	else:
+		weapon_anim_player.play("bat_attack_side")
+		weapon_sprite.flip_h = direction.x < 0
+# Funkcja zarządzająca ruchem
+func update_animation_and_direction(direction: Vector2):
+	if direction.y > 0:
+		animation_player.play("run_down")
+		last_direction = "down"
+	elif direction.y < 0:
+		animation_player.play("run_up")
+		last_direction = "up"
+	elif direction.x != 0:
+		animation_player.play("run_side")
+		last_direction = "side"
+		
+		
+		var is_flipped = direction.x < 0
+		body_sprite.flip_h = is_flipped
+		weapon_sprite.flip_h = is_flipped
+
+# Funkcja od stania w miejscu
+func play_idle_animation():
+	if last_direction == "down":
+		animation_player.play("idle_down")
+	elif last_direction == "up":
+		animation_player.play("idle_up")
+	elif last_direction == "side":
+		animation_player.play("idle_side")
 
 func get_nearest_enemy():
 	var enemies = attack_range.get_overlapping_bodies()
@@ -61,7 +129,6 @@ func get_nearest_enemy():
 	
 	for body in enemies:
 		if body.is_in_group("enemies"):
-			# Obliczamy dystans: $$d = \sqrt{(x_2-x_1)^2 + (y_2-y_1)^2}$$
 			var distance = global_position.distance_to(body.global_position)
 			if distance < shortest_distance:
 				shortest_distance = distance
@@ -70,14 +137,11 @@ func get_nearest_enemy():
 	return nearest_enemy
 
 func attack_enemy(target):
-	# Prosty efekt: "strzał" w konsoli i zadanie obrażeń
 	print("Atakuję: ", target.name)
 	target.take_damage(40)
-	# Tutaj możesz dodać animację pocisku lub błysk
 	
 func add_caps(amount: int):
 	caps += amount
-	# Update label'a
 	var label = get_tree().get_first_node_in_group("caps_label")
 	if label:
 		label.text = "Kapsle: " + str(caps)

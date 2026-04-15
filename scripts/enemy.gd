@@ -11,7 +11,8 @@ const HIT_SHADER = preload("res://assets/shaders/hit_flash.gdshader")
 var health = 100
 var player = null
 
-@onready var sprite: Sprite2D = $Sprite2D
+@onready var sprite: Sprite2D = $BodySprite
+@onready var animation_player = $AnimationPlayer 
 
 func _ready():
 	z_index = 2
@@ -19,10 +20,27 @@ func _ready():
 
 func _physics_process(_delta):
 	if player:
+		# Obliczamy kierunek do gracza
 		var direction = global_position.direction_to(player.global_position)
+		
+		# Ruch i odpychanie
 		var move = direction * SPEED + get_separation_force()
 		velocity = move
 		move_and_slide()
+		
+		# DODANE: Wywołanie funkcji zmieniającej animacje
+		update_animation(direction)
+
+# DODANE: Funkcja zarządzająca animacją wroga
+func update_animation(direction: Vector2):
+	if abs(direction.y) > abs(direction.x):
+		if direction.y > 0:
+			animation_player.play("run_down")
+		else:
+			animation_player.play("run_up")
+	else:
+		animation_player.play("run_side")
+		sprite.flip_h = direction.x < 0
 
 func get_separation_force() -> Vector2:
 	var force = Vector2.ZERO
