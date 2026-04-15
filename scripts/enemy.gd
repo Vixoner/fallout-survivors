@@ -14,77 +14,59 @@ var health = 100
 var player = null
 var is_dead: bool = false
 
-var attack_damage = 10
-var attack_cooldown = 0.5    
+var attack_cooldown = 1.0  # Jak często wróg ma zadawać obrażenia
 var attack_timer = 0.0
-var is_attacking: bool = false
-var trigger_distance: float = 65.0
 
 @onready var sprite: Sprite2D = $BodySprite
 @onready var animation_player = $AnimationPlayer 
-@onready var attack_area: Area2D = $AttackRange
-@onready var attack_collision: CollisionShape2D = $AttackRange/AttackCircle
 
 func _ready():
 	z_index = 2
 	player = get_tree().get_first_node_in_group("player")
-	animation_player.animation_finished.connect(_on_animation_finished)
-	
-func _physics_process(_delta):
-	if is_dead:
+
+func _physics_process(delta):
+	if is_dead: 
 		return
-	attack_timer += _delta
-		
+	
 	if player:
 		var direction = global_position.direction_to(player.global_position)
-		var distance_to_player = global_position.distance_to(player.global_position)
-		if distance_to_player <= trigger_distance and attack_timer >= attack_cooldown:
-			perform_attack(direction)			
-		if not is_attacking:
+		var distance = global_position.distance_to(player.global_position)
+		attack_timer += delta
+		
+		# 2. Logika ataku
+		if distance < CONTACT_DISTANCE:
+			if attack_timer >= attack_cooldown:
+				play_attack_animation(direction)
+				player.take_damage(DAMAGE)
+				attack_timer = 0.0
+		
+		# 3. Ruch i animacja biegu (tylko gdy nie atakuje)
+		if not is_currently_attacking():
 			var move = direction * SPEED + get_separation_force()
 			velocity = move
 			move_and_slide()
-			update_animation(direction)
-		
-func perform_attack(direction: Vector2):
-	is_attacking = true
-	attack_timer = 0.0
-	if abs(direction.y) > abs(direction.x):
-		if direction.y > 0: animation_player.play("attack_down")
-		else: animation_player.play("attack_up")
-	else:
-		if direction.x < 0: animation_player.play("attack_left")
-		else: animation_player.play("attack_right")
-				
-func deal_damage(): 
-	var targets = attack_area.get_overlapping_bodies()
-	print(player)
-	for target in targets:
-		print("W zasięgu jest: ", target.name)  
-		if target.is_in_group("player"):
-			target.take_damage(attack_damage)
-			print("Wróg trafił gracza!")
-		
-func update_movement_animation(direction: Vector2):
-	if abs(direction.y) > abs(direction.x):
-		if direction.y > 0:
-			animation_player.play("run_down")
-		else:
-			animation_player.play("run_up")
-	else:
-		animation_player.play("run_side")
-		sprite.flip_h = direction.x < 0
-		
-<<<<<<< HEAD
-=======
-		update_animation(direction)
+			update_run_animation(direction)
 
 		if global_position.distance_to(player.global_position) < CONTACT_DISTANCE:
 			player.take_damage(DAMAGE)
-
+			
+func is_currently_attacking() -> bool:
+	return animation_player.is_playing() and animation_player.current_animation.contains("attack")
+	
+func play_attack_animation(direction: Vector2):
+	if abs(direction.y) > abs(direction.x):
+		if direction.y > 0:
+			animation_player.play("attack_down")
+		else:
+			animation_player.play("attack_up")
+	else:
+		if direction.x < 0:
+			animation_player.play("attack_left")
+		else:
+			animation_player.play("attack_right")
+			
 # DODANE: Funkcja zarządzająca animacją wroga
->>>>>>> 7e8506a5828b069b082ce2f4a91797b9b84e3c86
-func update_animation(direction: Vector2):
+func update_run_animation(direction: Vector2):
 	if abs(direction.y) > abs(direction.x):
 		if direction.y > 0:
 			animation_player.play("run_down")
@@ -106,9 +88,6 @@ func get_separation_force() -> Vector2:
 	return force
 
 func take_damage(amount):
-	if is_dead:
-		return
-	
 	health -= amount
 	flash_hit()
 	spawn_damage_number(amount)
@@ -141,20 +120,9 @@ func spawn_damage_number(amount: int):
 	tween.chain().tween_callback(label.queue_free)
 
 func die():
-	#emit_signal("died", global_position)
-	#queue_free()
-	is_dead = true
 	emit_signal("died", global_position)
-	
-	if has_node("CollisionShape2D"):
-		$CollisionShape2D.set_deferred("disabled", true)
-	
+	$CollisionShape2D.set_deferred("disabled", true)
+	set_physics_process(false)
 	animation_player.play("death_basic")
-
-	
-func _on_animation_finished(anim_name: String):
-	if anim_name == "death_basic":
-		await get_tree().create_timer(5.0).timeout
-		queue_free()
-	elif anim_name.contains("attack"):
-		is_attacking = false
+	await get_tree().create_timer(2.0).timeout
+	queue_free()

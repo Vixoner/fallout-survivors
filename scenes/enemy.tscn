@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://dv75qxd33a3i0" path="res://scripts/enemy.gd" id="1_md0e3"]
 [ext_resource type="Texture2D" uid="uid://nerpmus54k1k" path="res://assets/sprites/Enemies/Zombie_Small/Zombie_Small_Down_walk-Sheet6.png" id="2_5uy6h"]
 [ext_resource type="Texture2D" uid="uid://bv57rq0mdepv8" path="res://assets/sprites/Enemies/Zombie_Small/Zombie_Small_Side_Walk-Sheet6.png" id="3_c4w8v"]
+[ext_resource type="Texture2D" uid="uid://6vqtvo17u7te" path="res://assets/sprites/Enemies/Zombie_Small/Zombie_Small_Down_First-Attack-Sheet4.png" id="3_ipns3"]
 [ext_resource type="Texture2D" uid="uid://c0lwjwqg7jdb6" path="res://assets/sprites/Enemies/Zombie_Small/Zombie_Small_Side-left_First-Attack-Sheet4.png" id="3_md484"]
 [ext_resource type="Texture2D" uid="uid://cdkbbmy3h76s1" path="res://assets/sprites/Enemies/Zombie_Small/Zombie_Small_Side-left_Second-Death-Sheet7.png" id="3_xwavj"]
 [ext_resource type="Texture2D" uid="uid://cpei0ab3uss7q" path="res://assets/sprites/Enemies/Zombie_Small/Zombie_Small_Side_First-Attack-Sheet4.png" id="4_ipns3"]
@@ -57,22 +58,34 @@ length = 0.4
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("BodySprite:hframes")
+tracks/0/path = NodePath("BodySprite:texture")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 1,
-"values": [4]
+"values": [ExtResource("3_ipns3")]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("BodySprite:frame")
+tracks/1/path = NodePath("BodySprite:hframes")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [4]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("BodySprite:frame")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
 "times": PackedFloat32Array(0, 0.1, 0.2, 0.3),
 "transitions": PackedFloat32Array(1, 1, 1, 1),
 "update": 1,
