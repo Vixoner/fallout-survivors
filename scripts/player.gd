@@ -161,6 +161,8 @@ func take_damage(amount: int):
 	invincible = true
 	_start_blink()
 	await get_tree().create_timer(INVINCIBILITY_DURATION).timeout
+	if not is_instance_valid(self) or not is_inside_tree():
+		return
 	invincible = false
 	_stop_blink()
 
