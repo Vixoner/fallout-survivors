@@ -8,10 +8,13 @@ const PLAYER_SIZE = 64
 @onready var weapon_sprite = $WeaponSprite
 @onready var animation_player = $AnimationPlayer
 @onready var weapon_anim_player = $WeaponAnimationPlayer
+var max_health: int = 100
+var current_health: int = 100
 
 var caps: int = 0
 var movement_blocked: bool = false
 var attack_cooldown = 0.25 
+const HIT_SHADER = preload("res://assets/shaders/hit_flash.gdshader")
 
 #var time_since_last_attack = 0.0 Narazie zbędne, jak dodamy więcej broni to wróci
 #var current_weapon: String = "none"
@@ -76,17 +79,16 @@ func handle_knife_autoattack(delta):
 		if target:
 			var attack_direction = global_position.direction_to(target.global_position)
 			
-			# Odpalamy animację noża
+			
 			play_knife_animation(attack_direction)
 			
-			# Zadajemy obrażenia
+			
 			target.take_damage(40)
 			print("Auto-dźgnięcie: ", target.name)
 			
-			# Resetujemy tylko stoper noża
+		
 			knife_timer = 0.0
-
-# Zmiana nazwy funkcji dla porządku
+			
 func play_knife_animation(direction: Vector2):
 	if abs(direction.y) > abs(direction.x):
 		if direction.y > 0:
@@ -94,8 +96,11 @@ func play_knife_animation(direction: Vector2):
 		else:
 			weapon_anim_player.play("bat_attack_up")
 	else:
-		weapon_anim_player.play("bat_attack_side")
-		weapon_sprite.flip_h = direction.x < 0
+		if direction.x < 0:
+			weapon_anim_player.play("bat_attack_side")
+		else:
+			weapon_anim_player.play("bat_attack_right") 
+			 #
 # Funkcja zarządzająca ruchem
 func update_animation_and_direction(direction: Vector2):
 	if direction.y > 0:
@@ -111,7 +116,6 @@ func update_animation_and_direction(direction: Vector2):
 		
 		var is_flipped = direction.x < 0
 		body_sprite.flip_h = is_flipped
-		weapon_sprite.flip_h = is_flipped
 
 # Funkcja od stania w miejscu
 func play_idle_animation():
@@ -145,3 +149,43 @@ func add_caps(amount: int):
 	var label = get_tree().get_first_node_in_group("caps_label")
 	if label:
 		label.text = "Kapsle: " + str(caps)
+func die():
+	print("Game Over")
+	movement_blocked = true
+	
+	call_deferred("reload_scene")
+			
+func reload_scene():
+	get_tree().reload_current_scene()
+func take_damage(amount):
+	
+	current_health -= amount
+	flash_hit()
+	spawn_damage_number(amount)
+	if current_health <= 0:
+		die()
+
+func flash_hit():
+	var mat = ShaderMaterial.new()
+	mat.shader = HIT_SHADER
+	body_sprite.material = mat
+	await get_tree().create_timer(0.12).timeout
+	if is_instance_valid(body_sprite):
+		body_sprite.material = null
+		
+func spawn_damage_number(amount: int):
+	var label = Label.new()
+	label.text = str(amount)
+	label.add_theme_font_size_override("font_size", 22)
+	label.add_theme_color_override("font_color", Color(1, 0.9, 0.1))
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	label.add_theme_constant_override("outline_size", 4)
+	label.z_index = 10
+	label.position = global_position + Vector2(-16, -60)
+	get_tree().root.get_child(0).add_child(label)
+
+	var tween = label.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "position:y", label.position.y - 50, 0.6)
+	tween.tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.2)
+	tween.chain().tween_callback(label.queue_free)
