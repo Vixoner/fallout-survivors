@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://d3msx4t4u7728" path="res://scenes/player.tscn" id="2_0wfyh"]
 [ext_resource type="Texture2D" uid="uid://die680jh4nr8v" path="res://waste.png" id="2_jyhfs"]
 [ext_resource type="Texture2D" uid="uid://4hnj7cj880j3" path="res://assets/sprites/Tiles/Background_Bleak-Yellow_TileSet.png" id="3_tbgi4"]
+[ext_resource type="Texture2D" uid="uid://dgupdmmlfpwsq" path="res://assets/sprites/HP-Bar.png" id="5_tbgi4"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_tefeu"]
 resource_name = "Tło"
@@ -348,6 +349,9 @@ texture = ExtResource("3_tbgi4")
 [sub_resource type="TileSet" id="TileSet_o6xl0"]
 sources/0 = SubResource("TileSetAtlasSource_tefeu")
 
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_tefeu"]
+load_path = "res://.godot/imported/HP.png-47e74dd23b7c59ba7abd9414cc19a441.ctex"
+
 [node name="Main" type="Node2D" unique_id=711233798]
 script = ExtResource("1_sugp2")
 
@@ -374,16 +378,35 @@ follow_viewport_scale = 10.259
 
 [node name="CapsLabel" type="Label" parent="CanvasLayer" unique_id=910706101 groups=["caps_label"]]
 offset_left = 46.0
-offset_top = 49.0
+offset_top = 145.0
 offset_right = 355.0
-offset_bottom = 163.0
+offset_bottom = 259.0
 theme_override_font_sizes/font_size = 32
 text = "Kapsle: 0"
 
 [node name="WaveLabel" type="Label" parent="CanvasLayer" unique_id=123456789 groups=["wave_label"]]
 offset_left = 46.0
-offset_top = 10.0
+offset_top = 106.0
 offset_right = 400.0
-offset_bottom = 45.0
+offset_bottom = 151.0
 theme_override_font_sizes/font_size = 32
 text = "Fala: 1 / 5"
+
+[node name="TextureProgressBar" type="TextureProgressBar" parent="CanvasLayer" unique_id=1212560098 groups=["hp_bar"]]
+offset_left = 42.0
+offset_top = 31.0
+offset_right = 97.0
+offset_bottom = 71.0
+scale = Vector2(6.0000024, 6.0000024)
+max_value = 20.0
+value = 20.0
+texture_over = ExtResource("5_tbgi4")
+texture_progress = SubResource("CompressedTexture2D_tefeu")
+texture_progress_offset = Vector2(10, 4)
+
+[node name="HpLabel" type="Label" parent="CanvasLayer" unique_id=1694444083 groups=["hp_label"]]
+offset_left = 212.0
+offset_top = 56.0
+offset_right = 255.0
+offset_bottom = 79.0
+text = "20/20"

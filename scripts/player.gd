@@ -13,6 +13,12 @@ var current_health: int = 100
 
 var caps: int = 0
 var movement_blocked: bool = false
+
+var max_hp: int = 20
+var current_hp: int = 20
+var invincible: bool = false
+const INVINCIBILITY_DURATION = 1.0
+var _blink_tween: Tween = null
 var attack_cooldown = 0.25 
 const HIT_SHADER = preload("res://assets/shaders/hit_flash.gdshader")
 
@@ -144,6 +150,63 @@ func attack_enemy(target):
 	print("Atakuję: ", target.name)
 	target.take_damage(40)
 	
+func take_damage(amount: int):
+	if invincible:
+		return
+	current_hp -= amount
+	current_hp = max(0, current_hp)
+	_update_hp_bar()
+	_spawn_damage_number(amount)
+	if current_hp <= 0:
+		_die()
+		return
+	invincible = true
+	_start_blink()
+	await get_tree().create_timer(INVINCIBILITY_DURATION).timeout
+	invincible = false
+	_stop_blink()
+
+func _start_blink():
+	if _blink_tween:
+		_blink_tween.kill()
+	_blink_tween = create_tween().set_loops()
+	_blink_tween.tween_property(self, "modulate:a", 0.15, 0.07)
+	_blink_tween.tween_property(self, "modulate:a", 1.0,  0.07)
+
+func _stop_blink():
+	if _blink_tween:
+		_blink_tween.kill()
+		_blink_tween = null
+	modulate.a = 1.0
+
+func _update_hp_bar():
+	var bar = get_tree().get_first_node_in_group("hp_bar")
+	if bar:
+		bar.value = current_hp
+	var label = get_tree().get_first_node_in_group("hp_label")
+	if label:
+		label.text = "%d / %d" % [current_hp, max_hp]
+
+func _spawn_damage_number(amount: int):
+	var label = Label.new()
+	label.text = "-%d" % amount
+	label.add_theme_font_size_override("font_size", 26)
+	label.add_theme_color_override("font_color", Color(1, 0.15, 0.15))
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	label.add_theme_constant_override("outline_size", 5)
+	label.z_index = 10
+	label.position = global_position + Vector2(-20, -80)
+	get_tree().root.get_child(0).add_child(label)
+
+	var tween = label.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "position:y", label.position.y - 55, 0.7)
+	tween.tween_property(label, "modulate:a", 0.0, 0.7).set_delay(0.2)
+	tween.chain().tween_callback(label.queue_free)
+
+func _die():
+	get_tree().reload_current_scene()
+
 func add_caps(amount: int):
 	caps += amount
 	var label = get_tree().get_first_node_in_group("caps_label")

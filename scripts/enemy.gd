@@ -5,6 +5,8 @@ signal died(position: Vector2)
 const SPEED = 300.0
 const SEPARATION_RADIUS = 80.0
 const SEPARATION_STRENGTH = 180.0
+const CONTACT_DISTANCE = 65.0
+const DAMAGE = 2
 
 const HIT_SHADER = preload("res://assets/shaders/hit_flash.gdshader")
 
@@ -73,6 +75,15 @@ func update_movement_animation(direction: Vector2):
 		animation_player.play("run_side")
 		sprite.flip_h = direction.x < 0
 		
+<<<<<<< HEAD
+=======
+		update_animation(direction)
+
+		if global_position.distance_to(player.global_position) < CONTACT_DISTANCE:
+			player.take_damage(DAMAGE)
+
+# DODANE: Funkcja zarządzająca animacją wroga
+>>>>>>> 7e8506a5828b069b082ce2f4a91797b9b84e3c86
 func update_animation(direction: Vector2):
 	if abs(direction.y) > abs(direction.x):
 		if direction.y > 0:
