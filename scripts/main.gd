@@ -32,6 +32,11 @@ func _ready():
 	player = get_tree().get_first_node_in_group("player")
 	start_wave(0)
 
+func _input(event):
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ENTER:
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			enemy.die()
+
 func _process(delta):
 	if not wave_active:
 		return

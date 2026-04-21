@@ -155,28 +155,41 @@ func _build_stats_panel() -> Control:
 	vbox.add_child(_hsep())
 
 	var stats = [
-		["STRENGTH",     "strength"],
-		["PERCEPTION",   "perception"],
-		["ENDURANCE",    "endurance"],
-		["CHARISMA",     "charisma"],
-		["INTELLIGENCE", "intelligence"],
-		["AGILITY",      "agility"],
-		["LUCK",         "luck"],
+		["STRENGTH",     "strength",     "Wpływa na obrażenia w walce wręcz."],
+		["PERCEPTION",   "perception",   "Wpływa na zasięg ataku broni palnej."],
+		["ENDURANCE",    "endurance",    "Wpływa na maksymalną liczbę punktów zdrowia i odporność na obrażenia."],
+		["CHARISMA",     "charisma",     "Wpływa na ceny w sklepie."],
+		["INTELLIGENCE", "intelligence", "Wpływa na wartości kapsli które wypadają z przeciwników i odpległość przyciągania kapsli."],
+		["AGILITY",      "agility",      "Wpływa na prędkość poruszania się."],
+		["LUCK",         "luck",         "Wpływa na szansę obrażeń krytycznych."],
 	]
 
+	# Tooltip z wyjaśnieniem statystyk
+	var tooltip = _build_tooltip()
+	add_child(tooltip)
+
 	for entry in stats:
-		var row = HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
+		var row = PanelContainer.new()
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var row_style_normal = _flat(C_CARD, Color(0,0,0,0), 0, 6)
+		var row_style_hover  = _flat(Color(0.06, 0.20, 0.06), C_BORDER, 1, 6)
+		row.add_theme_stylebox_override("panel", row_style_normal)
+		row.mouse_entered.connect(_on_stat_hover.bind(entry[0], entry[2], tooltip, row, row_style_hover))
+		row.mouse_exited.connect(_on_stat_exit.bind(tooltip, row, row_style_normal))
 		vbox.add_child(row)
+
+		var inner = HBoxContainer.new()
+		inner.add_theme_constant_override("separation", 8)
+		row.add_child(inner)
 
 		var name_lbl = _label(entry[0], 14, C_MID)
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(name_lbl)
+		inner.add_child(name_lbl)
 
 		var val = _player.get(entry[1]) if _player else 0
 		var val_lbl = _label(str(val), 16, C_BRIGHT)
 		val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		row.add_child(val_lbl)
+		inner.add_child(val_lbl)
 		_stat_labels[entry[1]] = val_lbl
 
 		vbox.add_child(_hsep())
@@ -263,6 +276,47 @@ func _on_buy(item: Dictionary, btn: Button, cost_lbl: Label, caps_label: Label):
 	btn.disabled = true
 	btn.add_theme_stylebox_override("normal", _flat(C_BOUGHT, C_DIM, 1, 2))
 	btn.add_theme_stylebox_override("hover",  _flat(C_BOUGHT, C_DIM, 1, 2))
+
+func _build_tooltip() -> Control:
+	var panel = PanelContainer.new()
+	panel.visible = false
+	panel.custom_minimum_size = Vector2(150, 0)
+	panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	panel.z_index = 20
+	panel.add_theme_stylebox_override("panel", _flat(C_PANEL, C_BRIGHT, 1, 6))
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 3)
+	panel.add_child(vbox)
+
+	var title = _label("", 12, C_BRIGHT)
+	vbox.add_child(title)
+	vbox.add_child(_hsep())
+	var desc = _label("", 11, C_MID)
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc.custom_minimum_size = Vector2(140, 0)
+	desc.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	vbox.add_child(desc)
+
+	# Przechowaj referencje jako metadane na panelu
+	panel.set_meta("title_lbl", title)
+	panel.set_meta("desc_lbl", desc)
+
+	return panel
+
+func _on_stat_hover(stat_name: String, desc: String, tooltip: Control, row: Control, hover_style: StyleBoxFlat):
+	row.add_theme_stylebox_override("panel", hover_style)
+	tooltip.get_meta("title_lbl").text = stat_name
+	tooltip.get_meta("desc_lbl").text = desc
+	tooltip.reset_size()
+	tooltip.visible = true
+	var row_rect = row.get_global_rect()
+	tooltip.set_position(Vector2(row_rect.end.x + 20, row_rect.position.y))
+
+func _on_stat_exit(tooltip: Control, row: Control, normal_style: StyleBoxFlat):
+	row.add_theme_stylebox_override("panel", normal_style)
+	tooltip.visible = false
 
 func _on_continue():
 	if _player:
