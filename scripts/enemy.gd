@@ -87,10 +87,10 @@ func get_separation_force() -> Vector2:
 			force += diff.normalized() * (1.0 - dist / SEPARATION_RADIUS) * SEPARATION_STRENGTH
 	return force
 
-func take_damage(amount):
+func take_damage(amount, is_crit: bool = false):
 	health -= amount
 	flash_hit()
-	spawn_damage_number(amount)
+	spawn_damage_number(amount, is_crit)
 	if health <= 0:
 		die()
 
@@ -102,21 +102,22 @@ func flash_hit():
 	if is_instance_valid(sprite):
 		sprite.material = null
 
-func spawn_damage_number(amount: int):
+func spawn_damage_number(amount: int, is_crit: bool = false):
 	var label = Label.new()
-	label.text = str(amount)
-	label.add_theme_font_size_override("font_size", 22)
-	label.add_theme_color_override("font_color", Color(1, 0.9, 0.1))
+	label.text = str(amount) + ("!" if is_crit else "")
+	label.add_theme_font_size_override("font_size", 32 if is_crit else 22)
+	label.add_theme_color_override("font_color", Color(1, 0.35, 0.0) if is_crit else Color(1, 0.9, 0.1))
 	label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	label.add_theme_constant_override("outline_size", 4)
+	label.add_theme_constant_override("outline_size", 5 if is_crit else 4)
 	label.z_index = 10
 	label.position = global_position + Vector2(-16, -60)
 	get_tree().root.get_child(0).add_child(label)
 
 	var tween = label.create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(label, "position:y", label.position.y - 50, 0.6)
-	tween.tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.2)
+	var rise = 80 if is_crit else 50
+	tween.tween_property(label, "position:y", label.position.y - rise, 0.7)
+	tween.tween_property(label, "modulate:a", 0.0, 0.7).set_delay(0.2)
 	tween.chain().tween_callback(label.queue_free)
 
 func die():

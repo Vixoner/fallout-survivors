@@ -43,6 +43,12 @@ const ALL_ITEMS = [
 		"cost": 5,  "stats": [["endurance", 2], ["charisma", -1]]},
 	{"name": "Podręcznik Taktyki",  "type": "PRZEDMIOT", "desc": "Przedwojenny poradnik wojskowy. Więcej myślenia, mniej siły brute.",
 		"cost": 10,  "stats": [["intelligence", 2], ["perception", 1], ["strength", -1]]},
+	{"name": "Brylantyna Pustkowia", "type": "PRZEDMIOT", "desc": "Puszka z przedwojennej fabryki. Jeden gest włosem — i już cię lubią.",
+		"cost": 4,  "stats": [["charisma", 1]]},
+	{"name": "Kurs Perswazji",       "type": "PRZEDMIOT", "desc": "Kaseta VHS. Oglądałeś ją pięćdziesiąt razy.",
+		"cost": 7,  "stats": [["charisma", 2]]},
+	{"name": "Garnitur Dyplomaty",   "type": "PRZEDMIOT", "desc": "Dobrze skrojony, ale krępuje ruchy. Wyglądasz lepiej niż się czujesz.",
+		"cost": 9,  "stats": [["charisma", 2], ["agility", -1]]},
 ]
 
 var _player: Node = null
@@ -159,7 +165,7 @@ func _build_stats_panel() -> Control:
 		["PERCEPTION",   "perception",   "Wpływa na zasięg ataku broni palnej."],
 		["ENDURANCE",    "endurance",    "Wpływa na maksymalną liczbę punktów zdrowia i odporność na obrażenia."],
 		["CHARISMA",     "charisma",     "Wpływa na ceny w sklepie."],
-		["INTELLIGENCE", "intelligence", "Wpływa na wartości kapsli które wypadają z przeciwników i odpległość przyciągania kapsli."],
+		["INTELLIGENCE", "intelligence", "Wpływa na odpległość przyciągania kapsli które wypadają z przeciwników."],
 		["AGILITY",      "agility",      "Wpływa na prędkość poruszania się."],
 		["LUCK",         "luck",         "Wpływa na szansę obrażeń krytycznych."],
 	]
@@ -234,8 +240,12 @@ func _make_card(item: Dictionary, caps_label: Label) -> Control:
 		s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(s)
 
-	# Koszt
-	var cost_lbl = _label("KOSZT: %d KAPSLI" % item["cost"], 13, C_CAPS)
+	# Koszt z uwzględnieniem charyzmy
+	var actual_cost = _get_actual_cost(item["cost"])
+	var cost_text = "KOSZT: %d KAPSLI" % actual_cost
+	if actual_cost != item["cost"]:
+		cost_text += "  [%d]" % item["cost"]
+	var cost_lbl = _label(cost_text, 13, C_CAPS)
 	cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(cost_lbl)
 
@@ -244,7 +254,7 @@ func _make_card(item: Dictionary, caps_label: Label) -> Control:
 	# Buy button
 	var buy_btn = _button("[ KUP ]", 17, C_BTN_BUY, C_BTN_HOV)
 	buy_btn.custom_minimum_size = Vector2(0, 42)
-	buy_btn.pressed.connect(_on_buy.bind(item, buy_btn, cost_lbl, caps_label))
+	buy_btn.pressed.connect(_on_buy.bind(item, buy_btn, cost_lbl, caps_label, actual_cost))
 	vbox.add_child(buy_btn)
 
 	# Padding pod przyciskiem
@@ -254,21 +264,28 @@ func _make_card(item: Dictionary, caps_label: Label) -> Control:
 
 	return card
 
-func _on_buy(item: Dictionary, btn: Button, cost_lbl: Label, caps_label: Label):
+func _get_actual_cost(base_cost: int) -> int:
+	if _player and _player.has_method("get_price_mult"):
+		return max(1, int(round(base_cost * _player.get_price_mult())))
+	return base_cost
+
+func _on_buy(item: Dictionary, btn: Button, cost_lbl: Label, caps_label: Label, actual_cost: int):
 	if _player == null or btn.disabled:
 		return
-	if _player.caps < item["cost"]:
+	if _player.caps < actual_cost:
 		var tween = create_tween()
 		tween.tween_property(cost_lbl, "modulate", Color(1, 0.2, 0.2), 0.08)
 		tween.tween_property(cost_lbl, "modulate", Color(1, 1, 1), 0.25)
 		return
 
-	_player.caps -= item["cost"]
+	_player.caps -= actual_cost
 	for entry in item["stats"]:
 		var stat: String = entry[0]
 		_player.set(stat, _player.get(stat) + entry[1])
 		if _stat_labels.has(stat):
 			_stat_labels[stat].text = str(_player.get(stat))
+	if _player.has_method("recalculate_stats"):
+		_player.recalculate_stats()
 	_player.add_caps(0)
 	caps_label.text = "KAPSLE: %d" % _player.caps
 

@@ -104,7 +104,7 @@ func get_spawn_position() -> Vector2:
 
 func _on_enemy_died(pos: Vector2):
 	enemies_alive -= 1
-	spawn_caps(pos, 3)
+	spawn_caps(pos, 3, 1)
 	check_wave_complete()
 
 func check_wave_complete():
