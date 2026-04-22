@@ -3,6 +3,7 @@ extends Node2D
 const CAP_SCENE = preload("res://scenes/cap.tscn")
 const ENEMY_SCENE = preload("res://scenes/enemy.tscn")
 const SHOP_SCRIPT = preload("res://scripts/shop.gd")
+const PAUSE_MENU_SCRIPT = preload("res://scripts/pause_menu.gd")
 
 const SPAWN_MIN_DIST = 700.0
 const SPAWN_MAX_DIST = 1100.0
@@ -26,6 +27,8 @@ var group_size: int = 3
 var wave_active: bool = false
 
 var player: Node2D = null
+var _pause_menu = null
+var _in_shop: bool = false
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -33,12 +36,16 @@ func _ready():
 	start_wave(0)
 
 func _input(event):
-	if event is InputEventKey and event.pressed and event.keycode == KEY_ENTER:
-		for enemy in get_tree().get_nodes_in_group("enemies"):
-			enemy.die()
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ENTER:
+			for enemy in get_tree().get_nodes_in_group("enemies"):
+				enemy.die()
 
 func _process(delta):
-	if not wave_active:
+	if Input.is_action_just_pressed("ui_cancel"):
+		_handle_escape()
+
+	if get_tree().paused or not wave_active:
 		return
 
 	# Jeśli nie ma żywych wrogów i są jeszcze do zrespienia, to skróć cooldown do zera
@@ -118,11 +125,23 @@ func check_wave_complete():
 			print(">>> Wszystkie fale ukończone! Wygrałeś!")
 			update_wave_label(true)
 
+func _handle_escape():
+	if _in_shop:
+		return
+	if is_instance_valid(_pause_menu):
+		_pause_menu._on_continue()
+	else:
+		_pause_menu = PAUSE_MENU_SCRIPT.new()
+		_pause_menu.resumed.connect(func(): _pause_menu = null)
+		add_child(_pause_menu)
+
 func show_shop():
+	_in_shop = true
 	var shop = SHOP_SCRIPT.new()
 	shop.setup(player)
 	add_child(shop)
 	await shop.shop_closed
+	_in_shop = false
 	start_wave(current_wave + 1)
 
 func update_wave_label(finished: bool = false):

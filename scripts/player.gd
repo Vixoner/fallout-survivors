@@ -38,6 +38,7 @@ var luck: int = 5
 
 func _ready():
 	z_index = 2
+	process_mode = Node.PROCESS_MODE_PAUSABLE
 	max_hp = get_max_hp()
 	current_hp = max_hp
 	_update_hp_bar()
@@ -168,7 +169,7 @@ func get_attract_radius() -> float:
 	return 200.0 + (intelligence - 5) * 25.0
 
 func get_price_mult() -> float:
-	return clamp(1.0 - (charisma - 5) * 0.1, 0.4, 1.5)
+	return clamp(1.0 - (charisma - 5) * 0.05, 0.4, 1.5)
 
 func get_melee_damage() -> int:
 	return 25 + strength * 3  # strength=5 → 40, każdy punkt = +3 dmg

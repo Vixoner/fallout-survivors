@@ -22,6 +22,7 @@ var attack_timer = 0.0
 
 func _ready():
 	z_index = 2
+	process_mode = Node.PROCESS_MODE_PAUSABLE
 	player = get_tree().get_first_node_in_group("player")
 
 func _physics_process(delta):
