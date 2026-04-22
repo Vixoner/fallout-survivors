@@ -156,7 +156,7 @@ func take_damage(amount: int):
 	_update_hp_bar()
 	_spawn_damage_number(amount)
 	if current_hp <= 0:
-		_die()
+		#_die()
 		return
 	invincible = true
 	_start_blink()
