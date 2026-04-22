@@ -43,6 +43,12 @@ const ALL_ITEMS = [
 		"cost": 5,  "stats": [["endurance", 2], ["charisma", -1]]},
 	{"name": "Podręcznik Taktyki",  "type": "PRZEDMIOT", "desc": "Przedwojenny poradnik wojskowy. Więcej myślenia, mniej siły brute.",
 		"cost": 10,  "stats": [["intelligence", 2], ["perception", 1], ["strength", -1]]},
+	{"name": "Brylantyna Pustkowia", "type": "PRZEDMIOT", "desc": "Puszka z przedwojennej fabryki. Jeden gest włosem — i już cię lubią.",
+		"cost": 4,  "stats": [["charisma", 1]]},
+	{"name": "Kurs Perswazji",       "type": "PRZEDMIOT", "desc": "Kaseta VHS. Oglądałeś ją pięćdziesiąt razy.",
+		"cost": 7,  "stats": [["charisma", 2]]},
+	{"name": "Garnitur Dyplomaty",   "type": "PRZEDMIOT", "desc": "Dobrze skrojony, ale krępuje ruchy. Wyglądasz lepiej niż się czujesz.",
+		"cost": 9,  "stats": [["charisma", 2], ["agility", -1]]},
 ]
 
 var _player: Node = null
@@ -155,28 +161,41 @@ func _build_stats_panel() -> Control:
 	vbox.add_child(_hsep())
 
 	var stats = [
-		["STRENGTH",     "strength"],
-		["PERCEPTION",   "perception"],
-		["ENDURANCE",    "endurance"],
-		["CHARISMA",     "charisma"],
-		["INTELLIGENCE", "intelligence"],
-		["AGILITY",      "agility"],
-		["LUCK",         "luck"],
+		["STRENGTH",     "strength",     "Wpływa na obrażenia w walce wręcz."],
+		["PERCEPTION",   "perception",   "Wpływa na zasięg ataku broni palnej."],
+		["ENDURANCE",    "endurance",    "Wpływa na maksymalną liczbę punktów zdrowia i odporność na obrażenia."],
+		["CHARISMA",     "charisma",     "Wpływa na ceny w sklepie."],
+		["INTELLIGENCE", "intelligence", "Wpływa na odpległość przyciągania kapsli które wypadają z przeciwników."],
+		["AGILITY",      "agility",      "Wpływa na prędkość poruszania się."],
+		["LUCK",         "luck",         "Wpływa na szansę obrażeń krytycznych."],
 	]
 
+	# Tooltip z wyjaśnieniem statystyk
+	var tooltip = _build_tooltip()
+	add_child(tooltip)
+
 	for entry in stats:
-		var row = HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
+		var row = PanelContainer.new()
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var row_style_normal = _flat(C_CARD, Color(0,0,0,0), 0, 6)
+		var row_style_hover  = _flat(Color(0.06, 0.20, 0.06), C_BORDER, 1, 6)
+		row.add_theme_stylebox_override("panel", row_style_normal)
+		row.mouse_entered.connect(_on_stat_hover.bind(entry[0], entry[2], tooltip, row, row_style_hover))
+		row.mouse_exited.connect(_on_stat_exit.bind(tooltip, row, row_style_normal))
 		vbox.add_child(row)
+
+		var inner = HBoxContainer.new()
+		inner.add_theme_constant_override("separation", 8)
+		row.add_child(inner)
 
 		var name_lbl = _label(entry[0], 14, C_MID)
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(name_lbl)
+		inner.add_child(name_lbl)
 
 		var val = _player.get(entry[1]) if _player else 0
 		var val_lbl = _label(str(val), 16, C_BRIGHT)
 		val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		row.add_child(val_lbl)
+		inner.add_child(val_lbl)
 		_stat_labels[entry[1]] = val_lbl
 
 		vbox.add_child(_hsep())
@@ -221,8 +240,12 @@ func _make_card(item: Dictionary, caps_label: Label) -> Control:
 		s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(s)
 
-	# Koszt
-	var cost_lbl = _label("KOSZT: %d KAPSLI" % item["cost"], 13, C_CAPS)
+	# Koszt z uwzględnieniem charyzmy
+	var actual_cost = _get_actual_cost(item["cost"])
+	var cost_text = "KOSZT: %d KAPSLI" % actual_cost
+	if actual_cost != item["cost"]:
+		cost_text += "  [%d]" % item["cost"]
+	var cost_lbl = _label(cost_text, 13, C_CAPS)
 	cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(cost_lbl)
 
@@ -231,7 +254,7 @@ func _make_card(item: Dictionary, caps_label: Label) -> Control:
 	# Buy button
 	var buy_btn = _button("[ KUP ]", 17, C_BTN_BUY, C_BTN_HOV)
 	buy_btn.custom_minimum_size = Vector2(0, 42)
-	buy_btn.pressed.connect(_on_buy.bind(item, buy_btn, cost_lbl, caps_label))
+	buy_btn.pressed.connect(_on_buy.bind(item, buy_btn, cost_lbl, caps_label, actual_cost))
 	vbox.add_child(buy_btn)
 
 	# Padding pod przyciskiem
@@ -241,21 +264,28 @@ func _make_card(item: Dictionary, caps_label: Label) -> Control:
 
 	return card
 
-func _on_buy(item: Dictionary, btn: Button, cost_lbl: Label, caps_label: Label):
+func _get_actual_cost(base_cost: int) -> int:
+	if _player and _player.has_method("get_price_mult"):
+		return max(1, int(round(base_cost * _player.get_price_mult())))
+	return base_cost
+
+func _on_buy(item: Dictionary, btn: Button, cost_lbl: Label, caps_label: Label, actual_cost: int):
 	if _player == null or btn.disabled:
 		return
-	if _player.caps < item["cost"]:
+	if _player.caps < actual_cost:
 		var tween = create_tween()
 		tween.tween_property(cost_lbl, "modulate", Color(1, 0.2, 0.2), 0.08)
 		tween.tween_property(cost_lbl, "modulate", Color(1, 1, 1), 0.25)
 		return
 
-	_player.caps -= item["cost"]
+	_player.caps -= actual_cost
 	for entry in item["stats"]:
 		var stat: String = entry[0]
 		_player.set(stat, _player.get(stat) + entry[1])
 		if _stat_labels.has(stat):
 			_stat_labels[stat].text = str(_player.get(stat))
+	if _player.has_method("recalculate_stats"):
+		_player.recalculate_stats()
 	_player.add_caps(0)
 	caps_label.text = "KAPSLE: %d" % _player.caps
 
@@ -263,6 +293,47 @@ func _on_buy(item: Dictionary, btn: Button, cost_lbl: Label, caps_label: Label):
 	btn.disabled = true
 	btn.add_theme_stylebox_override("normal", _flat(C_BOUGHT, C_DIM, 1, 2))
 	btn.add_theme_stylebox_override("hover",  _flat(C_BOUGHT, C_DIM, 1, 2))
+
+func _build_tooltip() -> Control:
+	var panel = PanelContainer.new()
+	panel.visible = false
+	panel.custom_minimum_size = Vector2(150, 0)
+	panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	panel.z_index = 20
+	panel.add_theme_stylebox_override("panel", _flat(C_PANEL, C_BRIGHT, 1, 6))
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 3)
+	panel.add_child(vbox)
+
+	var title = _label("", 12, C_BRIGHT)
+	vbox.add_child(title)
+	vbox.add_child(_hsep())
+	var desc = _label("", 11, C_MID)
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc.custom_minimum_size = Vector2(140, 0)
+	desc.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	vbox.add_child(desc)
+
+	# Przechowaj referencje jako metadane na panelu
+	panel.set_meta("title_lbl", title)
+	panel.set_meta("desc_lbl", desc)
+
+	return panel
+
+func _on_stat_hover(stat_name: String, desc: String, tooltip: Control, row: Control, hover_style: StyleBoxFlat):
+	row.add_theme_stylebox_override("panel", hover_style)
+	tooltip.get_meta("title_lbl").text = stat_name
+	tooltip.get_meta("desc_lbl").text = desc
+	tooltip.reset_size()
+	tooltip.visible = true
+	var row_rect = row.get_global_rect()
+	tooltip.set_position(Vector2(row_rect.end.x + 20, row_rect.position.y))
+
+func _on_stat_exit(tooltip: Control, row: Control, normal_style: StyleBoxFlat):
+	row.add_theme_stylebox_override("panel", normal_style)
+	tooltip.visible = false
 
 func _on_continue():
 	if _player:

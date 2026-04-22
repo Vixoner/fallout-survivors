@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
-const SPEED = 500.0
+const BASE_SPEED = 500.0
+const BASE_HP    = 20
 const PLAYER_SIZE = 64
 
 @onready var attack_range = $AttackRange
@@ -37,6 +38,10 @@ var luck: int = 5
 
 func _ready():
 	z_index = 2
+	process_mode = Node.PROCESS_MODE_PAUSABLE
+	max_hp = get_max_hp()
+	current_hp = max_hp
+	_update_hp_bar()
 
 func _physics_process(delta):
 	if movement_blocked:
@@ -61,7 +66,7 @@ func _physics_process(delta):
 	else:
 		play_idle_animation()
 		
-	velocity = direction * SPEED
+	velocity = direction * get_move_speed()
 	move_and_slide()
 	
 	position.x = clamp(position.x, -GameConstants.MAP_WIDTH / 2 + PLAYER_SIZE, GameConstants.MAP_WIDTH / 2 - PLAYER_SIZE)
@@ -75,6 +80,7 @@ func _physics_process(delta):
 	#	if target:
 	#		attack_enemy(target)
 	#		time_since_last_attack = 0.0
+	
 func handle_knife_autoattack(delta):
 	knife_timer += delta
 	if knife_timer >= knife_cooldown:
@@ -86,8 +92,10 @@ func handle_knife_autoattack(delta):
 			play_knife_animation(attack_direction)
 			
 			# Zadajemy obrażenia
-			target.take_damage(40)
-			print("Auto-dźgnięcie: ", target.name)
+			var is_crit = roll_crit()
+			var base_dmg = get_melee_damage()
+			var dmg = base_dmg * 2 if is_crit else base_dmg
+			target.take_damage(dmg, is_crit)
 			
 			# Resetujemy tylko stoper noża
 			knife_timer = 0.0
@@ -144,17 +152,50 @@ func get_nearest_enemy():
   
 	return nearest_enemy
 
-func attack_enemy(target):
-	print("Atakuję: ", target.name)
-	target.take_damage(40)
+#func attack_enemy(target):
+	#print("Atakuję: ", target.name)
+	#target.take_damage(40)
 	
+func get_move_speed() -> float:
+	return BASE_SPEED + (agility - 5) * 40.0
+
+func get_max_hp() -> int:
+	return BASE_HP + (endurance - 5) * 3
+
+func get_damage_reduction() -> float:
+	return clamp((endurance - 5) * 0.08, -0.5, 0.5)
+
+func get_attract_radius() -> float:
+	return 200.0 + (intelligence - 5) * 25.0
+
+func get_price_mult() -> float:
+	return clamp(1.0 - (charisma - 5) * 0.05, 0.4, 1.5)
+
+func get_melee_damage() -> int:
+	return 25 + strength * 3  # strength=5 → 40, każdy punkt = +3 dmg
+
+func get_crit_chance() -> float:
+	return luck * 0.03  # 3% na punkt, bazowo luck=5 → 15%
+
+func roll_crit() -> bool:
+	return randf() < get_crit_chance()
+
+func recalculate_stats():
+	var new_max = get_max_hp()
+	var diff = new_max - max_hp
+	max_hp = new_max
+	current_hp = clamp(current_hp + diff, 1, max_hp)
+	_update_hp_bar()
+
 func take_damage(amount: int):
 	if invincible:
 		return
-	current_hp -= amount
+	var reduction = get_damage_reduction()
+	var final_amount = max(1, int(round(amount * (1.0 - reduction))))
+	current_hp -= final_amount
 	current_hp = max(0, current_hp)
 	_update_hp_bar()
-	_spawn_damage_number(amount)
+	_spawn_damage_number(final_amount)
 	if current_hp <= 0:
 		#_die()
 		return
@@ -182,6 +223,7 @@ func _stop_blink():
 func _update_hp_bar():
 	var bar = get_tree().get_first_node_in_group("hp_bar")
 	if bar:
+		bar.max_value = max_hp
 		bar.value = current_hp
 	var label = get_tree().get_first_node_in_group("hp_label")
 	if label:
