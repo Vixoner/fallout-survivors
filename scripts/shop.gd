@@ -49,10 +49,20 @@ const ALL_ITEMS = [
 		"cost": 7,  "stats": [["charisma", 2]]},
 	{"name": "Garnitur Dyplomaty",   "type": "PRZEDMIOT", "desc": "Dobrze skrojony, ale krępuje ruchy. Wyglądasz lepiej niż się czujesz.",
 		"cost": 9,  "stats": [["charisma", 2], ["agility", -1]]},
+	{"name": "Mała Apteczka",        "type": "APTECZKA",  "desc": "Stimpak klasy C. Podstawowy środek medyczny.",
+		"cost": 6,  "heal": 0.15},
+	{"name": "Średnia Apteczka",     "type": "APTECZKA",  "desc": "Stimpak klasy B. Standardowy wojskowy zestaw medyczny.",
+		"cost": 11,  "heal": 0.30},
+	{"name": "Duża Apteczka",        "type": "APTECZKA",  "desc": "Stimpak klasy A. Zaawansowany preparat z przedwojennych zapasów.",
+		"cost": 17, "heal": 0.50},
 ]
 
 var _player: Node = null
-var _stat_labels: Dictionary = {}  # stat_name -> Label
+var _stat_labels: Dictionary = {}
+var _reroll_cost: int = 5
+var _cards_hbox: HBoxContainer = null
+var _caps_label: Label = null
+var _reroll_cost_lbl: Label = null
 
 func setup(player: Node):
 	_player = player
@@ -102,27 +112,42 @@ func _build_ui():
 
 	root_vbox.add_child(_hsep())
 
-	var caps_label = _label("KAPSLE: %d" % _player.caps, 19, C_CAPS)
-	caps_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	root_vbox.add_child(caps_label)
+	_caps_label = _label("KAPSLE: %d" % _player.caps, 19, C_CAPS)
+	_caps_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	root_vbox.add_child(_caps_label)
 
-	var cards_hbox = HBoxContainer.new()
-	cards_hbox.add_theme_constant_override("separation", 16)
-	cards_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cards_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root_vbox.add_child(cards_hbox)
-
-	var pool = ALL_ITEMS.duplicate()
-	pool.shuffle()
-	for item in pool.slice(0, 3):
-		cards_hbox.add_child(_make_card(item, caps_label))
+	_cards_hbox = HBoxContainer.new()
+	_cards_hbox.add_theme_constant_override("separation", 16)
+	_cards_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_cards_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root_vbox.add_child(_cards_hbox)
+	_spawn_cards()
 
 	root_vbox.add_child(_hsep())
 
 	var bottom = HBoxContainer.new()
+
+	# Reroll (lewa strona)
+	var reroll_vbox = VBoxContainer.new()
+	reroll_vbox.add_theme_constant_override("separation", 4)
+	var reroll_btn = _button("[ ODŚWIEŻ ]", 17, C_BTN_BUY, C_BTN_HOV)
+	reroll_btn.custom_minimum_size = Vector2(180, 42)
+	reroll_btn.pressed.connect(_on_reroll.bind(reroll_btn))
+	reroll_vbox.add_child(reroll_btn)
+	_reroll_cost_lbl = _label("KOSZT: %d KAPSLI" % _reroll_cost, 12, C_CAPS)
+	_reroll_cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	reroll_vbox.add_child(_reroll_cost_lbl)
+	var reroll_margin = MarginContainer.new()
+	reroll_margin.add_theme_constant_override("margin_left", 12)
+	reroll_margin.add_theme_constant_override("margin_bottom", 8)
+	reroll_margin.add_child(reroll_vbox)
+	bottom.add_child(reroll_margin)
+
 	var spacer = Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bottom.add_child(spacer)
+
+	# Kontynuuj (prawa strona)
 	var cont_btn = _button("[ KONTYNUUJ > ]", 20, C_BTN_CONT, C_BTN_CONT_HOV)
 	cont_btn.custom_minimum_size = Vector2(220, 50)
 	cont_btn.pressed.connect(_on_continue)
@@ -154,20 +179,20 @@ func _build_stats_panel() -> Control:
 	vbox.add_theme_constant_override("separation", 10)
 	panel.add_child(vbox)
 
-	var title = _label("// S.P.E.C.I.A.L. //", 18, C_BRIGHT)
+	var title = _label("// STATYSTYKI //", 18, C_BRIGHT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(title)
 
 	vbox.add_child(_hsep())
 
 	var stats = [
-		["STRENGTH",     "strength",     "Wpływa na obrażenia w walce wręcz."],
-		["PERCEPTION",   "perception",   "Wpływa na zasięg ataku broni palnej."],
-		["ENDURANCE",    "endurance",    "Wpływa na maksymalną liczbę punktów zdrowia i odporność na obrażenia."],
-		["CHARISMA",     "charisma",     "Wpływa na ceny w sklepie."],
-		["INTELLIGENCE", "intelligence", "Wpływa na odpległość przyciągania kapsli które wypadają z przeciwników."],
-		["AGILITY",      "agility",      "Wpływa na prędkość poruszania się."],
-		["LUCK",         "luck",         "Wpływa na szansę obrażeń krytycznych."],
+		["SIŁA",           "strength",     "Wpływa na obrażenia w walce wręcz."],
+		["PERCEPCJA",      "perception",   "Wpływa na zasięg ataku broni palnej."],
+		["WYTRZYMAŁOŚĆ",   "endurance",    "Wpływa na maksymalną liczbę punktów zdrowia i odporność na obrażenia."],
+		["CHARYZMA",       "charisma",     "Wpływa na ceny w sklepie."],
+		["INTELIGENCJA",   "intelligence", "Wpływa na odległość przyciągania kapsli które wypadają z przeciwników."],
+		["ZWINNOŚĆ",       "agility",      "Wpływa na prędkość poruszania się."],
+		["SZCZĘŚCIE",      "luck",         "Wpływa na szansę obrażeń krytycznych."],
 	]
 
 	# Tooltip z wyjaśnieniem statystyk
@@ -202,7 +227,30 @@ func _build_stats_panel() -> Control:
 
 	return panel
 
-func _make_card(item: Dictionary, caps_label: Label) -> Control:
+func _spawn_cards():
+	var pool = ALL_ITEMS.duplicate()
+	pool.shuffle()
+	for item in pool.slice(0, 3):
+		_cards_hbox.add_child(_make_card(item))
+
+func _on_reroll(btn: Button):
+	if _player == null:
+		return
+	if _player.caps < _reroll_cost:
+		var tween = create_tween()
+		tween.tween_property(_reroll_cost_lbl, "modulate", Color(1, 0.2, 0.2), 0.08)
+		tween.tween_property(_reroll_cost_lbl, "modulate", Color(1, 1, 1), 0.25)
+		return
+	_player.caps -= _reroll_cost
+	_player.add_caps(0)
+	_caps_label.text = "KAPSLE: %d" % _player.caps
+	_reroll_cost = int(_reroll_cost * 1.25)
+	_reroll_cost_lbl.text = "KOSZT: %d KAPSLI" % _reroll_cost
+	for child in _cards_hbox.get_children():
+		child.queue_free()
+	_spawn_cards()
+
+func _make_card(item: Dictionary) -> Control:
 	var card = PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.add_theme_stylebox_override("panel", _flat(C_CARD, C_BORDER, 1, 2, 14, 14))
@@ -231,14 +279,26 @@ func _make_card(item: Dictionary, caps_label: Label) -> Control:
 	vbox.add_child(desc_lbl)
 
 	# Stat bonuses
-	for entry in item["stats"]:
-		var stat: String = entry[0]
-		var val: int = entry[1]
-		var prefix = "+" if val > 0 else ""
-		var color = C_BRIGHT if val > 0 else Color(1.0, 0.35, 0.35)
-		var s = _label("%s%d  %s" % [prefix, val, stat.to_upper()], 15, color)
+	const STAT_NAMES = {
+		"strength": "SIŁA", "perception": "PERCEPCJA", "endurance": "WYTRZYMAŁOŚĆ",
+		"charisma": "CHARYZMA", "intelligence": "INTELIGENCJA",
+		"agility": "ZWINNOŚĆ", "luck": "SZCZĘŚCIE",
+	}
+	if item.has("heal"):
+		var pct = int(item["heal"] * 100)
+		var s = _label("+%d%%  HP" % pct, 15, Color(0.3, 1.0, 0.4))
 		s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(s)
+	else:
+		for entry in item.get("stats", []):
+			var stat: String = entry[0]
+			var val: int = entry[1]
+			var prefix = "+" if val > 0 else ""
+			var color = C_BRIGHT if val > 0 else Color(1.0, 0.35, 0.35)
+			var stat_name = STAT_NAMES.get(stat, stat.to_upper())
+			var s = _label("%s%d  %s" % [prefix, val, stat_name], 15, color)
+			s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			vbox.add_child(s)
 
 	# Koszt z uwzględnieniem charyzmy
 	var actual_cost = _get_actual_cost(item["cost"])
@@ -254,7 +314,7 @@ func _make_card(item: Dictionary, caps_label: Label) -> Control:
 	# Buy button
 	var buy_btn = _button("[ KUP ]", 17, C_BTN_BUY, C_BTN_HOV)
 	buy_btn.custom_minimum_size = Vector2(0, 42)
-	buy_btn.pressed.connect(_on_buy.bind(item, buy_btn, cost_lbl, caps_label, actual_cost))
+	buy_btn.pressed.connect(_on_buy.bind(item, buy_btn, cost_lbl, actual_cost))
 	vbox.add_child(buy_btn)
 
 	# Padding pod przyciskiem
@@ -269,7 +329,7 @@ func _get_actual_cost(base_cost: int) -> int:
 		return max(1, int(round(base_cost * _player.get_price_mult())))
 	return base_cost
 
-func _on_buy(item: Dictionary, btn: Button, cost_lbl: Label, caps_label: Label, actual_cost: int):
+func _on_buy(item: Dictionary, btn: Button, cost_lbl: Label, actual_cost: int):
 	if _player == null or btn.disabled:
 		return
 	if _player.caps < actual_cost:
@@ -279,15 +339,20 @@ func _on_buy(item: Dictionary, btn: Button, cost_lbl: Label, caps_label: Label, 
 		return
 
 	_player.caps -= actual_cost
-	for entry in item["stats"]:
-		var stat: String = entry[0]
-		_player.set(stat, _player.get(stat) + entry[1])
-		if _stat_labels.has(stat):
-			_stat_labels[stat].text = str(_player.get(stat))
-	if _player.has_method("recalculate_stats"):
-		_player.recalculate_stats()
 	_player.add_caps(0)
-	caps_label.text = "KAPSLE: %d" % _player.caps
+	if item.has("heal"):
+		var heal_amount = int(_player.max_hp * item["heal"])
+		_player.current_hp = min(_player.current_hp + heal_amount, _player.max_hp)
+		_player._update_hp_bar()
+	else:
+		for entry in item.get("stats", []):
+			var stat: String = entry[0]
+			_player.set(stat, _player.get(stat) + entry[1])
+			if _stat_labels.has(stat):
+				_stat_labels[stat].text = str(_player.get(stat))
+		if _player.has_method("recalculate_stats"):
+			_player.recalculate_stats()
+	_caps_label.text = "KAPSLE: %d" % _player.caps
 
 	btn.text = "[ KUPIONO ]"
 	btn.disabled = true
