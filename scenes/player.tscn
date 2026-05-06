@@ -11,6 +11,9 @@
 [ext_resource type="Texture2D" uid="uid://cg5cj8q2hrcu0" path="res://assets/sprites/Character/Bat/Bat_side_attack-Sheet4.png" id="9_3v2ag"]
 [ext_resource type="Texture2D" uid="uid://dpejt2lmeg8ak" path="res://assets/sprites/Character/Bat/Bat_side-left_attack-Sheet4.png" id="9_d2wvv"]
 [ext_resource type="Texture2D" uid="uid://cepuimtjn85r4" path="res://assets/sprites/Character/Bat/Bat_up_attack-Sheet4.png" id="10_3v2ag"]
+[ext_resource type="Texture2D" uid="uid://b6ef24yrqdvpu" path="res://assets/sprites/Character/Guns/Pistol/Pistol_down_idle-and-run-Sheet6.png" id="12_jej6c"]
+[ext_resource type="Texture2D" uid="uid://beym1x60mv1nw" path="res://assets/sprites/Character/Guns/Pistol/Pistol_up_shoot-Sheet3.png" id="13_f1ej7"]
+[ext_resource type="Texture2D" uid="uid://cof7tc6hpi0p1" path="res://assets/sprites/Character/Guns/Pistol/Pistol_down_shoot-Sheet3.png" id="13_oprun"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_g2els"]
 size = Vector2(128, 147.22223)
@@ -303,6 +306,18 @@ tracks/3/keys = {
 "update": 0,
 "values": [0.0]
 }
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("WeaponSprite:hframes")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [3]
+}
 
 [sub_resource type="Animation" id="Animation_fulsm"]
 resource_name = "bat_attack_down"
@@ -354,6 +369,18 @@ tracks/3/keys = {
 "transitions": PackedFloat32Array(1),
 "update": 0,
 "values": [0.0]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("WeaponSprite:hframes")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [4]
 }
 
 [sub_resource type="Animation" id="Animation_i4ail"]
@@ -447,6 +474,18 @@ tracks/3/keys = {
 "update": 0,
 "values": [4.7350783]
 }
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("WeaponSprite:hframes")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0.4),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [4]
+}
 
 [sub_resource type="Animation" id="Animation_60mlk"]
 resource_name = "bat_attack_up"
@@ -500,13 +539,125 @@ tracks/3/keys = {
 "values": [Vector2(1, -19)]
 }
 
+[sub_resource type="Animation" id="Animation_a38lo"]
+resource_name = "pistol_idle&run_down"
+length = 0.6
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("WeaponSprite:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("12_jej6c")]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("WeaponSprite:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4, 5]
+}
+
+[sub_resource type="Animation" id="Animation_l71n6"]
+resource_name = "pistol_shoot_down"
+length = 0.2
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("WeaponSprite:hframes")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [3]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("WeaponSprite:texture")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("13_oprun")]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("WeaponSprite:frame")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 1,
+"values": [0, 1, 2]
+}
+
+[sub_resource type="Animation" id="Animation_4ni07"]
+resource_name = "pistol_shoot_up"
+length = 0.2
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("WeaponSprite:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("13_f1ej7")]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("WeaponSprite:hframes")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [3]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("WeaponSprite:frame")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 1,
+"values": [0, 1, 2]
+}
+
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_i4ail"]
 _data = {
 &"RESET": SubResource("Animation_qfm1y"),
 &"bat_attack_down": SubResource("Animation_fulsm"),
 &"bat_attack_right": SubResource("Animation_i4ail"),
 &"bat_attack_side": SubResource("Animation_4r5pv"),
-&"bat_attack_up": SubResource("Animation_60mlk")
+&"bat_attack_up": SubResource("Animation_60mlk"),
+&"pistol_idle&run_down": SubResource("Animation_a38lo"),
+&"pistol_shoot_down": SubResource("Animation_l71n6"),
+&"pistol_shoot_up": SubResource("Animation_4ni07")
 }
 
 [node name="Player" type="Node2D" unique_id=447343164]
@@ -545,9 +696,9 @@ frame = 1
 
 [node name="WeaponSprite" type="Sprite2D" parent="CharacterBody2D" unique_id=825569254]
 position = Vector2(18, -11)
-scale = Vector2(2, 2)
+scale = Vector2(2.8928783, 2)
 texture = ExtResource("3_y4r1p")
-hframes = 4
+hframes = 3
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="CharacterBody2D" unique_id=2130248941]
 libraries/ = SubResource("AnimationLibrary_qlg0r")
