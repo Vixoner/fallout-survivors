@@ -1,28 +1,31 @@
 extends CharacterBody2D
 
-signal died(position: Vector2)
+signal died(position: Vector2, caps_count: int)
 
-const SPEED = 300.0
 const SEPARATION_RADIUS = 80.0
 const SEPARATION_STRENGTH = 180.0
-const CONTACT_DISTANCE = 65.0
-const DAMAGE = 2
-
 const HIT_SHADER = preload("res://assets/shaders/hit_flash.gdshader")
 
-var health = 100
+@export var max_health: int       = 100
+@export var move_speed: float     = 300.0
+@export var attack_damage: int    = 2
+@export var attack_cooldown: float = 1.0
+@export var contact_distance: float = 65.0
+@export var caps_drop_min: int = 2
+@export var caps_drop_max: int = 4
+
+var health: int
 var player = null
 var is_dead: bool = false
-
-var attack_cooldown = 1.0  # Jak często wróg ma zadawać obrażenia
-var attack_timer = 0.0
+var attack_timer: float = 0.0
 
 @onready var sprite: Sprite2D = $BodySprite
 @onready var animation_player = $AnimationPlayer 
 
 func _ready():
-	z_index = 2
+	z_index = 5
 	process_mode = Node.PROCESS_MODE_PAUSABLE
+	health = max_health
 	player = get_tree().get_first_node_in_group("player")
 
 func _physics_process(delta):
@@ -35,21 +38,18 @@ func _physics_process(delta):
 		attack_timer += delta
 		
 		# 2. Logika ataku
-		if distance < CONTACT_DISTANCE:
+		if distance < contact_distance:
 			if attack_timer >= attack_cooldown:
 				play_attack_animation(direction)
-				player.take_damage(DAMAGE)
+				player.take_damage(attack_damage)
 				attack_timer = 0.0
-		
+
 		# 3. Ruch i animacja biegu (tylko gdy nie atakuje)
 		if not is_currently_attacking():
-			var move = direction * SPEED + get_separation_force()
+			var move = direction * move_speed + get_separation_force()
 			velocity = move
 			move_and_slide()
 			update_run_animation(direction)
-
-		if global_position.distance_to(player.global_position) < CONTACT_DISTANCE:
-			player.take_damage(DAMAGE)
 			
 func is_currently_attacking() -> bool:
 	return animation_player.is_playing() and animation_player.current_animation.contains("attack")
@@ -122,9 +122,16 @@ func spawn_damage_number(amount: int, is_crit: bool = false):
 	tween.chain().tween_callback(label.queue_free)
 
 func die():
-	emit_signal("died", global_position)
+	is_dead = true
+	emit_signal("died", global_position, randi_range(caps_drop_min, caps_drop_max))
+	z_index = 3
 	$CollisionShape2D.set_deferred("disabled", true)
 	set_physics_process(false)
 	animation_player.play("death_basic")
-	await get_tree().create_timer(2.0).timeout
+	await get_tree().create_timer(1.2).timeout
+	if not is_instance_valid(self) or not is_inside_tree():
+		return
+	var tween = create_tween()
+	tween.tween_property(self, "modulate:a", 0.0, 0.8)
+	await tween.finished
 	queue_free()

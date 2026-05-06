@@ -1,20 +1,25 @@
 extends Node2D
 
 const CAP_SCENE = preload("res://scenes/cap.tscn")
-const ENEMY_SCENE = preload("res://scenes/enemy.tscn")
 const SHOP_SCRIPT = preload("res://scripts/shop.gd")
 const PAUSE_MENU_SCRIPT = preload("res://scripts/pause_menu.gd")
 
 const SPAWN_MIN_DIST = 700.0
 const SPAWN_MAX_DIST = 1100.0
 
-# Definicje fal: [liczba_przeciwnikow, cooldown_spawnu, rozmiar_grupy]
+# Typy przeciwników
+const ENEMY_SCENES = {
+	"zombie_small": preload("res://scenes/enemy.tscn"),
+	"zombie_big":   preload("res://scenes/enemy_big.tscn"),
+}
+
+# Definicje fal: cooldown spawnu, rozmiar grupy, typy i liczba przeciwników
 const WAVES = [
-	[10, 3.0, 3],
-	[15, 2.5, 3],
-	[20, 2.0, 4],
-	[25, 2.0, 4],
-	[30, 1.5, 5],
+	{"cooldown": 3.0, "group_size": 3, "enemies": {"zombie_small": 10}},
+	{"cooldown": 2.5, "group_size": 3, "enemies": {"zombie_small": 12, "zombie_big": 3}},
+	{"cooldown": 2.0, "group_size": 4, "enemies": {"zombie_small": 15, "zombie_big": 5}},
+	{"cooldown": 2.0, "group_size": 4, "enemies": {"zombie_small": 18, "zombie_big": 7}},
+	{"cooldown": 1.5, "group_size": 5, "enemies": {"zombie_small": 20, "zombie_big": 10}},
 ]
 
 var current_wave: int = 0
@@ -25,6 +30,7 @@ var spawn_cooldown: float = 0.0
 var spawn_timer: float = 0.0
 var group_size: int = 3
 var wave_active: bool = false
+var _spawn_queue: Array = []
 
 var player: Node2D = null
 var _pause_menu = null
@@ -60,15 +66,23 @@ func _process(delta):
 func start_wave(wave_index: int):
 	current_wave = wave_index
 	var data = WAVES[wave_index]
-	enemies_to_spawn = data[0]
-	spawn_cooldown = data[1]
-	group_size = data[2]
+	spawn_cooldown = data["cooldown"]
+	group_size = data["group_size"]
 	enemies_spawned = 0
 	enemies_alive = 0
-	spawn_timer = spawn_cooldown  # Instant spawn na początku fali
+
+	_spawn_queue = []
+	for type_name in data["enemies"]:
+		var scene = ENEMY_SCENES[type_name]
+		for i in data["enemies"][type_name]:
+			_spawn_queue.append(scene)
+	_spawn_queue.shuffle()
+	enemies_to_spawn = _spawn_queue.size()
+
+	spawn_timer = spawn_cooldown
 	wave_active = true
 	update_wave_label()
-	print(">>> Fala ", current_wave + 1, " rozpoczęta, Wrogów: ", enemies_to_spawn)
+	print(">>> Fala ", current_wave + 1, " — Wrogów: ", enemies_to_spawn)
 
 func spawn_group():
 	var to_spawn = min(group_size, enemies_to_spawn - enemies_spawned)
@@ -76,7 +90,10 @@ func spawn_group():
 		spawn_single_enemy()
 
 func spawn_single_enemy():
-	var enemy = ENEMY_SCENE.instantiate()
+	if _spawn_queue.is_empty():
+		return
+	var scene = _spawn_queue.pop_back()
+	var enemy = scene.instantiate()
 	enemy.global_position = get_spawn_position()
 	enemy.died.connect(_on_enemy_died)
 	add_child(enemy)
@@ -109,9 +126,9 @@ func get_spawn_position() -> Vector2:
 	pos.y = clamp(pos.y, map_min.y, map_max.y)
 	return pos
 
-func _on_enemy_died(pos: Vector2):
+func _on_enemy_died(pos: Vector2, caps_count: int):
 	enemies_alive -= 1
-	spawn_caps(pos, 3, 1)
+	spawn_caps(pos, caps_count, 1)
 	check_wave_complete()
 
 func check_wave_complete():

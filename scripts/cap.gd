@@ -88,11 +88,20 @@ func _on_body_entered(body):
 		_collect()
 
 func _collect():
+	_play_pickup_sound()
 	if _player.has_method("add_caps"):
 		_player.add_caps(value)
 	if is_instance_valid(_trail):
 		_trail.queue_free()
 	queue_free()
+
+func _play_pickup_sound():
+	var sound = AudioStreamPlayer.new()
+	sound.stream = preload("res://assets/audio/cap_pickup.wav")
+	sound.volume_db = -16.0
+	get_tree().root.get_child(0).add_child(sound)
+	sound.play()
+	sound.finished.connect(sound.queue_free)
 
 func _exit_tree():
 	if is_instance_valid(_trail):

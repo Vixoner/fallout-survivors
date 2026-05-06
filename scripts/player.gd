@@ -37,7 +37,7 @@ var agility: int = 5
 var luck: int = 5
 
 func _ready():
-	z_index = 2
+	z_index = 6
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 	max_hp = get_max_hp()
 	current_hp = max_hp
@@ -69,8 +69,8 @@ func _physics_process(delta):
 	velocity = direction * get_move_speed()
 	move_and_slide()
 	
-	position.x = clamp(position.x, -GameConstants.MAP_WIDTH / 2 + PLAYER_SIZE, GameConstants.MAP_WIDTH / 2 - PLAYER_SIZE)
-	position.y = clamp(position.y, -GameConstants.MAP_HEIGHT / 2 + PLAYER_SIZE, GameConstants.MAP_HEIGHT / 2 - PLAYER_SIZE)
+	position.x = clamp(position.x, -GameConstants.MAP_WIDTH / 2.0 + PLAYER_SIZE, GameConstants.MAP_WIDTH / 2.0 - PLAYER_SIZE)
+	position.y = clamp(position.y, -GameConstants.MAP_HEIGHT / 2.0 + PLAYER_SIZE, GameConstants.MAP_HEIGHT / 2.0 - PLAYER_SIZE)
 	
 	
 	handle_knife_autoattack(delta)
