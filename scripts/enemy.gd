@@ -18,6 +18,7 @@ var health: int
 var player = null
 var is_dead: bool = false
 var attack_timer: float = 0.0
+var _champion_tween: Tween = null
 
 @onready var sprite: Sprite2D = $BodySprite
 @onready var animation_player = $AnimationPlayer 
@@ -121,12 +122,27 @@ func spawn_damage_number(amount: int, is_crit: bool = false):
 	tween.tween_property(label, "modulate:a", 0.0, 0.7).set_delay(0.2)
 	tween.chain().tween_callback(label.queue_free)
 
+func make_champion():
+	max_health = int(max_health  * 2.0)
+	health = max_health
+	move_speed *= 1.3
+	attack_damage = int(attack_damage  * 2.0)
+	caps_drop_min = int(caps_drop_min  * 1.3)
+	caps_drop_max = int(caps_drop_max  * 1.3)
+	scale *= 1.15
+	_champion_tween = create_tween().set_loops()
+	_champion_tween.tween_property(self, "modulate", Color(1.9, 0.25, 0.25), 0.45)
+	_champion_tween.tween_property(self, "modulate", Color(1.3, 0.55, 0.55), 0.45)
+
 func die():
 	is_dead = true
 	emit_signal("died", global_position, randi_range(caps_drop_min, caps_drop_max))
 	z_index = 3
 	$CollisionShape2D.set_deferred("disabled", true)
 	set_physics_process(false)
+	if _champion_tween:
+		_champion_tween.kill()
+		_champion_tween = null
 	animation_player.play("death_basic")
 	await get_tree().create_timer(1.2).timeout
 	if not is_instance_valid(self) or not is_inside_tree():

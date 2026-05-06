@@ -399,7 +399,7 @@ max_health = 300
 move_speed = 180.0
 attack_damage = 6
 attack_cooldown = 2.0
-contact_distance = 80.0
+contact_distance = 135.0
 caps_drop_min = 6
 caps_drop_max = 10
 

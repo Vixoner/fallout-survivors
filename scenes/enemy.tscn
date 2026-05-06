@@ -397,6 +397,7 @@ radius = 36.67424
 scale = Vector2(2, 2)
 collision_mask = 2
 script = ExtResource("1_md0e3")
+contact_distance = 95.0
 caps_drop_min = 1
 caps_drop_max = 3
 

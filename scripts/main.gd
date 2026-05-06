@@ -14,12 +14,27 @@ const ENEMY_SCENES = {
 }
 
 # Definicje fal: cooldown spawnu, rozmiar grupy, typy i liczba przeciwników
+# enemies: typ -> {count, champs}  (champs = ile z nich to czempioni)
 const WAVES = [
-	{"cooldown": 3.0, "group_size": 3, "enemies": {"zombie_small": 10}},
-	{"cooldown": 2.5, "group_size": 3, "enemies": {"zombie_small": 12, "zombie_big": 3}},
-	{"cooldown": 2.0, "group_size": 4, "enemies": {"zombie_small": 15, "zombie_big": 5}},
-	{"cooldown": 2.0, "group_size": 4, "enemies": {"zombie_small": 18, "zombie_big": 7}},
-	{"cooldown": 1.5, "group_size": 5, "enemies": {"zombie_small": 20, "zombie_big": 10}},
+	{"cooldown": 3.0, "group_size": 3, "enemies": {
+		"zombie_small": {"count": 10, "champs": 0},
+	}},
+	{"cooldown": 2.5, "group_size": 3, "enemies": {
+		"zombie_small": {"count": 13, "champs": 1},
+		"zombie_big":   {"count": 3,  "champs": 0},
+	}},
+	{"cooldown": 2.0, "group_size": 4, "enemies": {
+		"zombie_small": {"count": 15, "champs": 3},
+		"zombie_big":   {"count": 4,  "champs": 1},
+	}},
+	{"cooldown": 2.0, "group_size": 4, "enemies": {
+		"zombie_small": {"count": 20, "champs": 6},
+		"zombie_big":   {"count": 5,  "champs": 2},
+	}},
+	{"cooldown": 1.5, "group_size": 5, "enemies": {
+		"zombie_small": {"count": 30, "champs": 10},
+		"zombie_big":   {"count": 7, "champs": 3},
+	}},
 ]
 
 var current_wave: int = 0
@@ -73,9 +88,11 @@ func start_wave(wave_index: int):
 
 	_spawn_queue = []
 	for type_name in data["enemies"]:
+		var entry = data["enemies"][type_name]
 		var scene = ENEMY_SCENES[type_name]
-		for i in data["enemies"][type_name]:
-			_spawn_queue.append(scene)
+		var champs: int = entry["champs"]
+		for i in entry["count"]:
+			_spawn_queue.append({"scene": scene, "champion": i < champs})
 	_spawn_queue.shuffle()
 	enemies_to_spawn = _spawn_queue.size()
 
@@ -92,11 +109,13 @@ func spawn_group():
 func spawn_single_enemy():
 	if _spawn_queue.is_empty():
 		return
-	var scene = _spawn_queue.pop_back()
-	var enemy = scene.instantiate()
+	var data = _spawn_queue.pop_back()
+	var enemy = data["scene"].instantiate()
 	enemy.global_position = get_spawn_position()
 	enemy.died.connect(_on_enemy_died)
 	add_child(enemy)
+	if data["champion"]:
+		enemy.make_champion()
 	enemies_spawned += 1
 	enemies_alive += 1
 

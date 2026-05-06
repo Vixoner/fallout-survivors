@@ -49,6 +49,12 @@ const ALL_ITEMS = [
 		"cost": 7,  "stats": [["charisma", 2]]},
 	{"name": "Garnitur Dyplomaty",   "type": "PRZEDMIOT", "desc": "Dobrze skrojony, ale krępuje ruchy. Wyglądasz lepiej niż się czujesz.",
 		"cost": 9,  "stats": [["charisma", 2], ["agility", -1]]},
+	{"name": "Mała Apteczka",        "type": "APTECZKA",  "desc": "Stimpak klasy C. Podstawowy środek medyczny.",
+		"cost": 6,  "heal": 0.15},
+	{"name": "Średnia Apteczka",     "type": "APTECZKA",  "desc": "Stimpak klasy B. Standardowy wojskowy zestaw medyczny.",
+		"cost": 11,  "heal": 0.30},
+	{"name": "Duża Apteczka",        "type": "APTECZKA",  "desc": "Stimpak klasy A. Zaawansowany preparat z przedwojennych zapasów.",
+		"cost": 17, "heal": 0.50},
 ]
 
 var _player: Node = null
@@ -236,6 +242,7 @@ func _on_reroll(btn: Button):
 		tween.tween_property(_reroll_cost_lbl, "modulate", Color(1, 1, 1), 0.25)
 		return
 	_player.caps -= _reroll_cost
+	_player.add_caps(0)
 	_caps_label.text = "KAPSLE: %d" % _player.caps
 	_reroll_cost = int(_reroll_cost * 1.25)
 	_reroll_cost_lbl.text = "KOSZT: %d KAPSLI" % _reroll_cost
@@ -277,15 +284,21 @@ func _make_card(item: Dictionary) -> Control:
 		"charisma": "CHARYZMA", "intelligence": "INTELIGENCJA",
 		"agility": "ZWINNOŚĆ", "luck": "SZCZĘŚCIE",
 	}
-	for entry in item["stats"]:
-		var stat: String = entry[0]
-		var val: int = entry[1]
-		var prefix = "+" if val > 0 else ""
-		var color = C_BRIGHT if val > 0 else Color(1.0, 0.35, 0.35)
-		var stat_name = STAT_NAMES.get(stat, stat.to_upper())
-		var s = _label("%s%d  %s" % [prefix, val, stat_name], 15, color)
+	if item.has("heal"):
+		var pct = int(item["heal"] * 100)
+		var s = _label("+%d%%  HP" % pct, 15, Color(0.3, 1.0, 0.4))
 		s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(s)
+	else:
+		for entry in item.get("stats", []):
+			var stat: String = entry[0]
+			var val: int = entry[1]
+			var prefix = "+" if val > 0 else ""
+			var color = C_BRIGHT if val > 0 else Color(1.0, 0.35, 0.35)
+			var stat_name = STAT_NAMES.get(stat, stat.to_upper())
+			var s = _label("%s%d  %s" % [prefix, val, stat_name], 15, color)
+			s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			vbox.add_child(s)
 
 	# Koszt z uwzględnieniem charyzmy
 	var actual_cost = _get_actual_cost(item["cost"])
@@ -326,13 +339,19 @@ func _on_buy(item: Dictionary, btn: Button, cost_lbl: Label, actual_cost: int):
 		return
 
 	_player.caps -= actual_cost
-	for entry in item["stats"]:
-		var stat: String = entry[0]
-		_player.set(stat, _player.get(stat) + entry[1])
-		if _stat_labels.has(stat):
-			_stat_labels[stat].text = str(_player.get(stat))
-	if _player.has_method("recalculate_stats"):
-		_player.recalculate_stats()
+	_player.add_caps(0)
+	if item.has("heal"):
+		var heal_amount = int(_player.max_hp * item["heal"])
+		_player.current_hp = min(_player.current_hp + heal_amount, _player.max_hp)
+		_player._update_hp_bar()
+	else:
+		for entry in item.get("stats", []):
+			var stat: String = entry[0]
+			_player.set(stat, _player.get(stat) + entry[1])
+			if _stat_labels.has(stat):
+				_stat_labels[stat].text = str(_player.get(stat))
+		if _player.has_method("recalculate_stats"):
+			_player.recalculate_stats()
 	_caps_label.text = "KAPSLE: %d" % _player.caps
 
 	btn.text = "[ KUPIONO ]"
