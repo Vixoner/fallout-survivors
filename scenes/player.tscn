@@ -549,10 +549,12 @@ scale = Vector2(2, 2)
 texture = ExtResource("3_y4r1p")
 hframes = 4
 
-[node name="Muzzle" type="Marker2D" parent="CharacterBody2D/WeaponSprite" unique_id=1825168889]
-
 [node name="AnimationPlayer" type="AnimationPlayer" parent="CharacterBody2D" unique_id=2130248941]
 libraries/ = SubResource("AnimationLibrary_qlg0r")
 
 [node name="WeaponAnimationPlayer" type="AnimationPlayer" parent="CharacterBody2D" unique_id=1401873760]
 libraries/ = SubResource("AnimationLibrary_i4ail")
+
+[node name="GunPivot" type="Node2D" parent="CharacterBody2D" unique_id=2107149833]
+
+[node name="GunMuzzle" type="Marker2D" parent="CharacterBody2D/GunPivot" unique_id=686481490]

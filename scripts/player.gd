@@ -25,7 +25,9 @@ var attack_cooldown = 0.25
 var knife_cooldown = 0.5 
 var knife_timer = 0.0
 
-var last_direction = "down" 
+var last_direction = "down"
+
+var weapon_manager: WeaponManager = null
 
 # Statystyki SPECIAL
 var strength: int = 5
@@ -42,6 +44,13 @@ func _ready():
 	max_hp = get_max_hp()
 	current_hp = max_hp
 	_update_hp_bar()
+	_setup_weapon_manager()
+
+func _setup_weapon_manager():
+	weapon_manager = WeaponManager.new()
+	weapon_manager.name = "WeaponManager"
+	add_child(weapon_manager)
+	weapon_manager.equip(WeaponData.make_pistol())
 
 func _physics_process(delta):
 	if movement_blocked:
@@ -74,6 +83,7 @@ func _physics_process(delta):
 	
 	
 	handle_knife_autoattack(delta)
+	handle_weapon_fire(delta)
 	#time_since_last_attack += delta
 	#if time_since_last_attack >= attack_cooldown:
 	#	var target = get_nearest_enemy()
@@ -99,6 +109,17 @@ func handle_knife_autoattack(delta):
 			
 			# Resetujemy tylko stoper noża
 			knife_timer = 0.0
+
+func handle_weapon_fire(delta: float):
+	if not is_instance_valid(weapon_manager):
+		return
+	weapon_manager.tick(delta)
+	if not weapon_manager.can_fire():
+		return
+	var aim_dir = global_position.direction_to(get_global_mouse_position())
+	if aim_dir == Vector2.ZERO:
+		return
+	weapon_manager.fire(aim_dir)
 
 # Zmiana nazwy funkcji dla porządku
 func play_knife_animation(direction: Vector2):
