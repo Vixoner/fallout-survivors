@@ -90,6 +90,8 @@ func get_separation_force() -> Vector2:
 	return force
 
 func take_damage(amount, is_crit: bool = false):
+	if is_dead:
+		return
 	health -= amount
 	flash_hit()
 	spawn_damage_number(amount, is_crit)
@@ -135,6 +137,8 @@ func make_champion():
 	_champion_tween.tween_property(self, "modulate", Color(1.3, 0.55, 0.55), 0.45)
 
 func die():
+	if is_dead:
+		return
 	is_dead = true
 	emit_signal("died", global_position, randi_range(caps_drop_min, caps_drop_max))
 	z_index = 3

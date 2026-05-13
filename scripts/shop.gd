@@ -233,7 +233,7 @@ func _spawn_cards():
 	for item in pool.slice(0, 3):
 		_cards_hbox.add_child(_make_card(item))
 
-func _on_reroll(btn: Button):
+func _on_reroll(_btn: Button):
 	if _player == null:
 		return
 	if _player.caps < _reroll_cost:

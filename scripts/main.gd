@@ -140,10 +140,10 @@ func get_spawn_position() -> Vector2:
 
 	# Fallback: spawn po przeciwnej stronie mapy
 	var fallback_angle = player.global_position.angle_to_point(Vector2.ZERO)
-	var pos = player.global_position + Vector2(cos(fallback_angle), sin(fallback_angle)) * SPAWN_MIN_DIST
-	pos.x = clamp(pos.x, map_min.x, map_max.x)
-	pos.y = clamp(pos.y, map_min.y, map_max.y)
-	return pos
+	var fallback_pos = player.global_position + Vector2(cos(fallback_angle), sin(fallback_angle)) * SPAWN_MIN_DIST
+	fallback_pos.x = clamp(fallback_pos.x, map_min.x, map_max.x)
+	fallback_pos.y = clamp(fallback_pos.y, map_min.y, map_max.y)
+	return fallback_pos
 
 func _on_enemy_died(pos: Vector2, caps_count: int):
 	enemies_alive -= 1
@@ -188,12 +188,9 @@ func update_wave_label(finished: bool = false):
 		else:
 			label.text = "Fala: " + str(current_wave + 1) + " / " + str(WAVES.size())
 
-func spawn_caps(position: Vector2, count: int = 1, value: int = 1):
+func spawn_caps(spawn_pos: Vector2, count: int = 1, value: int = 1):
 	for i in count:
 		var cap = CAP_SCENE.instantiate()
 		cap.value = value
-		cap.global_position = position + Vector2(
-			randf_range(-30, 30),
-			randf_range(-30, 30)
-		)
-		add_child(cap)
+		cap.position = spawn_pos + Vector2(randf_range(-30, 30), randf_range(-30, 30))
+		add_child.call_deferred(cap)
