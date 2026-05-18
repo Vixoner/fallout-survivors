@@ -7,6 +7,9 @@ class_name WeaponData extends Resource
 @export var bullet_scene: PackedScene
 @export var spread_angle: float = 0.0
 @export var projectile_count: int = 1
+@export var is_beam: bool = false
+@export var beam_length: float = 700.0
+@export var beam_width: float = 28.0
 
 static func make_pistol() -> WeaponData:
 	var w := WeaponData.new()
@@ -15,4 +18,14 @@ static func make_pistol() -> WeaponData:
 	w.fire_rate = 0.4
 	w.bullet_speed = 1350.0
 	w.bullet_scene = load("res://scenes/bullet.tscn")
+	return w
+
+static func make_laser() -> WeaponData:
+	var w := WeaponData.new()
+	w.name = "Laser"
+	w.damage = 24
+	w.fire_rate = 0.6
+	w.is_beam = true
+	w.beam_length = 1050.0
+	w.beam_width = 52.0
 	return w

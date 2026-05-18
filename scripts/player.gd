@@ -55,6 +55,24 @@ func _setup_weapon_manager():
 	add_child(weapon_manager)
 	weapon_manager.equip(WeaponData.make_pistol())
 
+func _input(event):
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_1:
+			_equip_weapon_by_id("pistol")
+		elif event.keycode == KEY_2:
+			_equip_weapon_by_id("laser")
+
+func _equip_weapon_by_id(id: String):
+	if not is_instance_valid(weapon_manager):
+		return
+	if weapon_manager.current_weapon and weapon_manager.current_weapon.name.to_lower() == id:
+		return
+	match id:
+		"pistol":
+			weapon_manager.equip(WeaponData.make_pistol())
+		"laser":
+			weapon_manager.equip(WeaponData.make_laser())
+
 func _physics_process(delta):
 	if movement_blocked:
 		velocity = Vector2.ZERO

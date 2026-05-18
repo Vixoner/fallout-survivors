@@ -654,12 +654,10 @@ sources/5 = SubResource("TileSetAtlasSource_jkv2x")
 load_path = "res://.godot/imported/HP.png-47e74dd23b7c59ba7abd9414cc19a441.ctex"
 
 [node name="Main" type="Node2D" unique_id=711233798]
-position = Vector2(-22784, -75520)
 script = ExtResource("1_sugp2")
 
 [node name="Floor" type="Sprite2D" parent="." unique_id=979870751]
 texture_repeat = 2
-position = Vector2(188, -38)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("2_jyhfs")
 region_enabled = true
