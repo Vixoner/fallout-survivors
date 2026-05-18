@@ -35,11 +35,14 @@ func _physics_process(delta):
 	
 	if player:
 		var direction = global_position.direction_to(player.global_position)
+		var fleeing: bool = player.get("is_dying")
+		if fleeing:
+			direction = -direction
 		var distance = global_position.distance_to(player.global_position)
 		attack_timer += delta
-		
-		# 2. Logika ataku
-		if distance < contact_distance:
+
+		# 2. Logika ataku (tylko gdy gracz żywy)
+		if not fleeing and distance < contact_distance:
 			if attack_timer >= attack_cooldown:
 				play_attack_animation(direction)
 				player.take_damage(attack_damage)
@@ -56,6 +59,7 @@ func is_currently_attacking() -> bool:
 	return animation_player.is_playing() and animation_player.current_animation.contains("attack")
 	
 func play_attack_animation(direction: Vector2):
+	sprite.flip_h = false
 	if abs(direction.y) > abs(direction.x):
 		if direction.y > 0:
 			animation_player.play("attack_down")
@@ -70,6 +74,7 @@ func play_attack_animation(direction: Vector2):
 # DODANE: Funkcja zarządzająca animacją wroga
 func update_run_animation(direction: Vector2):
 	if abs(direction.y) > abs(direction.x):
+		sprite.flip_h = false
 		if direction.y > 0:
 			animation_player.play("run_down")
 		else:

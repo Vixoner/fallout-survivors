@@ -14,6 +14,8 @@
 [ext_resource type="Texture2D" uid="uid://b6ef24yrqdvpu" path="res://assets/sprites/Character/Guns/Pistol/Pistol_down_idle-and-run-Sheet6.png" id="12_jej6c"]
 [ext_resource type="Texture2D" uid="uid://beym1x60mv1nw" path="res://assets/sprites/Character/Guns/Pistol/Pistol_up_shoot-Sheet3.png" id="13_f1ej7"]
 [ext_resource type="Texture2D" uid="uid://cof7tc6hpi0p1" path="res://assets/sprites/Character/Guns/Pistol/Pistol_down_shoot-Sheet3.png" id="13_oprun"]
+[ext_resource type="Texture2D" uid="uid://c7kkja5cgqwcq" path="res://assets/sprites/Character/Main/Death/Character_side_death1-Sheet6.png" id="14_deathr"]
+[ext_resource type="Texture2D" uid="uid://dq6sm7keq167s" path="res://assets/sprites/Character/Main/Death/Character_side-left_death1-Sheet6.png" id="15_deathl"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_g2els"]
 size = Vector2(128, 147.22223)
@@ -48,21 +50,85 @@ tracks/1/keys = {
 "values": [ExtResource("2_fjrip")]
 }
 
+[sub_resource type="Animation" id="Animation_deathl"]
+resource_name = "death_left"
+length = 0.6
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("BodySprite:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("15_deathl")]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("BodySprite:hframes")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [6]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("BodySprite:frame")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4, 5]
+}
+
 [sub_resource type="Animation" id="Animation_d2wvv"]
-resource_name = "death"
-length = 0.7
+resource_name = "death_right"
+length = 0.6
 step = 0.1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("BodySprite:frame")
+tracks/0/path = NodePath("BodySprite:texture")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
 "update": 1,
-"values": [0, 1, 2, 3, 4, 5, 6]
+"values": [ExtResource("14_deathr")]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("BodySprite:hframes")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [6]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("BodySprite:frame")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4, 5]
 }
 
 [sub_resource type="Animation" id="Animation_3v2ag"]
@@ -247,7 +313,8 @@ tracks/1/keys = {
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_qlg0r"]
 _data = {
 &"RESET": SubResource("Animation_qhqgy"),
-&"death": SubResource("Animation_d2wvv"),
+&"death_left": SubResource("Animation_deathl"),
+&"death_right": SubResource("Animation_d2wvv"),
 &"idle_down": SubResource("Animation_3v2ag"),
 &"idle_side": SubResource("Animation_jej6c"),
 &"idle_up": SubResource("Animation_f1ej7"),
@@ -493,7 +560,7 @@ tracks/4/path = NodePath("WeaponSprite:hframes")
 tracks/4/interp = 1
 tracks/4/loop_wrap = true
 tracks/4/keys = {
-"times": PackedFloat32Array(0.4),
+"times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 1,
 "values": [4]

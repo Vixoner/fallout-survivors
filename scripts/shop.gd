@@ -187,7 +187,7 @@ func _build_stats_panel() -> Control:
 
 	var stats = [
 		["SIŁA",           "strength",     "Wpływa na obrażenia w walce wręcz."],
-		["PERCEPCJA",      "perception",   "Wpływa na zasięg ataku broni palnej."],
+		["PERCEPCJA",      "perception",   "Wpływa na obrażenia ataku broni palnej."],
 		["WYTRZYMAŁOŚĆ",   "endurance",    "Wpływa na maksymalną liczbę punktów zdrowia i odporność na obrażenia."],
 		["CHARYZMA",       "charisma",     "Wpływa na ceny w sklepie."],
 		["INTELIGENCJA",   "intelligence", "Wpływa na odległość przyciągania kapsli które wypadają z przeciwników."],

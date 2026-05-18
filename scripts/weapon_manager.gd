@@ -49,9 +49,18 @@ func _spawn_bullet(origin: Vector2, angle: float) -> void:
 	var bullet = current_weapon.bullet_scene.instantiate()
 	bullet.global_position = origin
 	bullet.rotation = angle
+	var owner_node = get_parent()
 	if "speed" in bullet:
 		bullet.speed = current_weapon.bullet_speed
 	if "damage" in bullet:
-		bullet.damage = current_weapon.damage
+		var crit: bool = owner_node and owner_node.has_method("roll_crit") and owner_node.roll_crit()
+		var dmg := current_weapon.damage
+		if owner_node and owner_node.has_method("get_ranged_damage_mult"):
+			dmg = int(round(dmg * owner_node.get_ranged_damage_mult()))
+		if crit:
+			dmg *= 2
+		bullet.damage = dmg
+		if "is_crit" in bullet:
+			bullet.is_crit = crit
 	var scene_root = get_tree().current_scene
 	scene_root.add_child(bullet)
