@@ -13,6 +13,6 @@ static func make_pistol() -> WeaponData:
 	w.name = "Pistol"
 	w.damage = 12
 	w.fire_rate = 0.4
-	w.bullet_speed = 900.0
+	w.bullet_speed = 1350.0
 	w.bullet_scene = load("res://scenes/bullet.tscn")
 	return w

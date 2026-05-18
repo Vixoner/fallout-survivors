@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+signal game_over
+
 const BASE_SPEED = 500.0
 const BASE_HP    = 20
 const PLAYER_SIZE = 64
@@ -12,6 +14,7 @@ const PLAYER_SIZE = 64
 
 var caps: int = 0
 var movement_blocked: bool = false
+var is_dying: bool = false
 
 var max_hp: int = 20
 var current_hp: int = 20
@@ -55,7 +58,8 @@ func _setup_weapon_manager():
 func _physics_process(delta):
 	if movement_blocked:
 		velocity = Vector2.ZERO
-		play_idle_animation()
+		if not is_dying:
+			play_idle_animation()
 		return
 
 	var direction = Vector2.ZERO
@@ -193,10 +197,13 @@ func get_price_mult() -> float:
 	return clamp(1.0 - (charisma - 5) * 0.05, 0.4, 1.5)
 
 func get_melee_damage() -> int:
-	return 25 + strength * 3  # strength=5 → 40, każdy punkt = +3 dmg
+	return 15 + strength * 3  # strength=5 → 40, każdy punkt = +3 dmg
 
 func get_crit_chance() -> float:
 	return luck * 0.03  # 3% na punkt, bazowo luck=5 → 15%
+
+func get_ranged_damage_mult() -> float:
+	return clamp(1.0 + (perception - 5) * 0.10, 0.5, 2.0)
 
 func roll_crit() -> bool:
 	return randf() < get_crit_chance()
@@ -209,7 +216,7 @@ func recalculate_stats():
 	_update_hp_bar()
 
 func take_damage(amount: int):
-	if invincible:
+	if invincible or is_dying:
 		return
 	var reduction = get_damage_reduction()
 	var final_amount = max(1, int(round(amount * (1.0 - reduction))))
@@ -218,7 +225,7 @@ func take_damage(amount: int):
 	_update_hp_bar()
 	_spawn_damage_number(final_amount)
 	if current_hp <= 0:
-		#_die()
+		_die()
 		return
 	invincible = true
 	_start_blink()
@@ -268,7 +275,35 @@ func _spawn_damage_number(amount: int):
 	tween.chain().tween_callback(label.queue_free)
 
 func _die():
-	get_tree().reload_current_scene()
+	if is_dying:
+		return
+	is_dying = true
+	movement_blocked = true
+	invincible = true
+	_stop_blink()
+	weapon_sprite.visible = false
+
+	if body_sprite.flip_h:
+		animation_player.play("death_left")
+	else:
+		animation_player.play("death_right")
+
+	await animation_player.animation_finished
+	if not is_instance_valid(self) or not is_inside_tree():
+		return
+
+	var canvas = CanvasLayer.new()
+	canvas.layer = 100
+	get_tree().root.get_child(0).add_child(canvas)
+	var overlay = ColorRect.new()
+	overlay.color = Color(0, 0, 0, 0)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	canvas.add_child(overlay)
+
+	var tween = overlay.create_tween()
+	tween.tween_property(overlay, "color:a", 1.0, 1.5)
+	await tween.finished
+	game_over.emit()
 
 func add_caps(amount: int):
 	caps += amount

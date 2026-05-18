@@ -3,6 +3,8 @@ extends Node2D
 const CAP_SCENE = preload("res://scenes/cap.tscn")
 const SHOP_SCRIPT = preload("res://scripts/shop.gd")
 const PAUSE_MENU_SCRIPT = preload("res://scripts/pause_menu.gd")
+const VICTORY_SCRIPT = preload("res://scripts/victory_screen.gd")
+const GAME_OVER_SCRIPT = preload("res://scripts/game_over_screen.gd")
 
 const SPAWN_MIN_DIST = 700.0
 const SPAWN_MAX_DIST = 1100.0
@@ -11,13 +13,14 @@ const SPAWN_MAX_DIST = 1100.0
 const ENEMY_SCENES = {
 	"zombie_small": preload("res://scenes/enemy.tscn"),
 	"zombie_big":   preload("res://scenes/enemy_big.tscn"),
+	"zombie_boss":  preload("res://scenes/enemy_boss.tscn"),
 }
 
 # Definicje fal: cooldown spawnu, rozmiar grupy, typy i liczba przeciwników
 # enemies: typ -> {count, champs}  (champs = ile z nich to czempioni)
 const WAVES = [
 	{"cooldown": 3.0, "group_size": 3, "enemies": {
-		"zombie_small": {"count": 10, "champs": 0},
+		"zombie_small":  {"count": 10,  "champs": 0},
 	}},
 	{"cooldown": 2.5, "group_size": 3, "enemies": {
 		"zombie_small": {"count": 13, "champs": 1},
@@ -32,8 +35,7 @@ const WAVES = [
 		"zombie_big":   {"count": 5,  "champs": 2},
 	}},
 	{"cooldown": 1.5, "group_size": 5, "enemies": {
-		"zombie_small": {"count": 30, "champs": 10},
-		"zombie_big":   {"count": 7, "champs": 3},
+		"zombie_boss":  {"count": 1,  "champs": 0},
 	}},
 ]
 
@@ -50,10 +52,17 @@ var _spawn_queue: Array = []
 var player: Node2D = null
 var _pause_menu = null
 var _in_shop: bool = false
+var _zombies_killed: int = 0
+var _run_time: float = 0.0
+var _victory_shown: bool = false
+var _game_over_shown: bool = false
+var _wave_ending: bool = false
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	player = get_tree().get_first_node_in_group("player")
+	if player:
+		player.game_over.connect(_on_player_game_over)
 	start_wave(0)
 
 func _input(event):
@@ -68,6 +77,10 @@ func _process(delta):
 
 	if get_tree().paused or not wave_active:
 		return
+	if player and player.get("is_dying"):
+		return
+
+	_run_time += delta
 
 	# Jeśli nie ma żywych wrogów i są jeszcze do zrespienia, to skróć cooldown do zera
 	if enemies_alive == 0 and enemies_spawned < enemies_to_spawn:
@@ -147,22 +160,34 @@ func get_spawn_position() -> Vector2:
 
 func _on_enemy_died(pos: Vector2, caps_count: int):
 	enemies_alive -= 1
+	_zombies_killed += 1
 	spawn_caps(pos, caps_count, 1)
 	check_wave_complete()
 
 func check_wave_complete():
+	if player and player.get("is_dying"):
+		return
 	if enemies_spawned >= enemies_to_spawn and enemies_alive <= 0:
 		wave_active = false
+		_wave_ending = true
 		print(">>> Fala ", current_wave + 1, " zakończona!")
 		if current_wave + 1 < WAVES.size():
 			await get_tree().create_timer(1.2).timeout
+			_wave_ending = false
 			show_shop()
 		else:
-			print(">>> Wszystkie fale ukończone! Wygrałeś!")
-			update_wave_label(true)
+			await get_tree().create_timer(1.2).timeout
+			show_victory_screen()
+
+func _on_player_game_over():
+	_game_over_shown = true
+	var screen = GAME_OVER_SCRIPT.new()
+	screen.zombies_killed = _zombies_killed
+	screen.elapsed_time = _run_time
+	add_child(screen)
 
 func _handle_escape():
-	if _in_shop:
+	if _in_shop or _victory_shown or _game_over_shown or _wave_ending or (player and player.get("is_dying")):
 		return
 	if is_instance_valid(_pause_menu):
 		_pause_menu._on_continue()
@@ -180,13 +205,17 @@ func show_shop():
 	_in_shop = false
 	start_wave(current_wave + 1)
 
-func update_wave_label(finished: bool = false):
+func show_victory_screen():
+	_victory_shown = true
+	var screen = VICTORY_SCRIPT.new()
+	screen.zombies_killed = _zombies_killed
+	screen.elapsed_time = _run_time
+	add_child(screen)
+
+func update_wave_label():
 	var label = get_tree().get_first_node_in_group("wave_label")
 	if label:
-		if finished:
-			label.text = "Wygrałeś!"
-		else:
-			label.text = "Fala: " + str(current_wave + 1) + " / " + str(WAVES.size())
+		label.text = "Fala: " + str(current_wave + 1) + " / " + str(WAVES.size())
 
 func spawn_caps(spawn_pos: Vector2, count: int = 1, value: int = 1):
 	for i in count:
