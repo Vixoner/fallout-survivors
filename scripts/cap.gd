@@ -99,6 +99,7 @@ func _play_pickup_sound():
 	var sound = AudioStreamPlayer.new()
 	sound.stream = preload("res://assets/audio/cap_pickup.wav")
 	sound.volume_db = -16.0
+	sound.bus = "SFX"
 	get_tree().root.get_child(0).add_child(sound)
 	sound.play()
 	sound.finished.connect(sound.queue_free)
