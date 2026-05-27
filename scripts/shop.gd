@@ -55,6 +55,8 @@ const ALL_ITEMS = [
 		"cost": 11,  "heal": 0.30},
 	{"name": "Duża Apteczka",        "type": "APTECZKA",  "desc": "Stimpak klasy A. Zaawansowany preparat z przedwojennych zapasów.",
 		"cost": 17, "heal": 0.50},
+	{"name": "Granat Odłamkowy",     "type": "GRANAT",    "desc": "Stary, ale wciąż zabójczy. Wybucha z hukiem w sporym promieniu.",
+		"cost": 22, "grenade_type": "frag", "grenade_count": 1},
 ]
 
 var _player: Node = null
@@ -289,6 +291,11 @@ func _make_card(item: Dictionary) -> Control:
 		var s = _label("+%d%%  HP" % pct, 15, Color(0.3, 1.0, 0.4))
 		s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(s)
+	elif item.has("grenade_type"):
+		var count: int = int(item.get("grenade_count", 1))
+		var s = _label("+%d  GRANAT" % count, 15, Color(1.0, 0.6, 0.3))
+		s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(s)
 	else:
 		for entry in item.get("stats", []):
 			var stat: String = entry[0]
@@ -338,12 +345,27 @@ func _on_buy(item: Dictionary, btn: Button, cost_lbl: Label, actual_cost: int):
 		tween.tween_property(cost_lbl, "modulate", Color(1, 1, 1), 0.25)
 		return
 
+	# Grenade items: refuse purchase (no deduction yet) if at the per-type cap.
+	# 4 mirrors player.MAX_GRENADES_PER_TYPE — if you tune that, update here too.
+	if item.has("grenade_type"):
+		var gtype: String = item["grenade_type"]
+		var cur_count: int = 0
+		if "grenades" in _player:
+			cur_count = int(_player.grenades.get(gtype, 0))
+		if cur_count >= 4:
+			var tween = create_tween()
+			tween.tween_property(cost_lbl, "modulate", Color(1, 0.2, 0.2), 0.08)
+			tween.tween_property(cost_lbl, "modulate", Color(1, 1, 1), 0.25)
+			return
+
 	_player.caps -= actual_cost
 	_player.add_caps(0)
 	if item.has("heal"):
 		var heal_amount = int(_player.max_hp * item["heal"])
 		_player.current_hp = min(_player.current_hp + heal_amount, _player.max_hp)
 		_player._update_hp_bar()
+	elif item.has("grenade_type"):
+		_player.add_grenade(item["grenade_type"], int(item.get("grenade_count", 1)))
 	else:
 		for entry in item.get("stats", []):
 			var stat: String = entry[0]

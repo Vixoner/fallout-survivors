@@ -32,6 +32,14 @@ var last_direction = "down"
 
 var weapon_manager: WeaponManager = null
 
+const FRAG_GRENADE_SCRIPT := preload("res://scripts/frag_grenade.gd")
+const MAX_GRENADES_PER_TYPE := 4
+const GRENADE_THROW_COOLDOWN := 0.35
+const MAX_THROW_RANGE := 900.0
+
+var grenades: Dictionary = {"frag": 0}
+var _grenade_throw_timer: float = 0.0
+
 # Statystyki SPECIAL
 var strength: int = 5
 var perception: int = 5
@@ -53,6 +61,7 @@ func _ready():
 func _apply_class() -> void:
 	var cls: Dictionary = GameState.selected_class
 	if cls.is_empty():
+		_update_grenades_ui()
 		return
 	var s: Dictionary = cls.get("stats", {})
 	strength     = s.get("strength",     strength)
@@ -62,6 +71,10 @@ func _apply_class() -> void:
 	intelligence = s.get("intelligence", intelligence)
 	agility      = s.get("agility",      agility)
 	luck         = s.get("luck",         luck)
+	var starting_grenades: Dictionary = cls.get("starting_grenades", {})
+	for gtype in starting_grenades:
+		grenades[gtype] = clamp(int(starting_grenades[gtype]), 0, MAX_GRENADES_PER_TYPE)
+	_update_grenades_ui()
 
 func _setup_weapon_manager():
 	weapon_manager = WeaponManager.new()
@@ -79,6 +92,41 @@ func _input(event):
 			_equip_weapon_by_id("plasma")
 		elif event.keycode == KEY_4:
 			_equip_weapon_by_id("shotgun")
+		elif event.keycode == KEY_G:
+			if not movement_blocked and not is_dying:
+				_throw_grenade("frag")
+
+func _throw_grenade(grenade_type: String) -> void:
+	if _grenade_throw_timer > 0.0:
+		return
+	if int(grenades.get(grenade_type, 0)) <= 0:
+		return
+	var target := get_global_mouse_position()
+	var to_target := target - global_position
+	if to_target.length() > MAX_THROW_RANGE:
+		target = global_position + to_target.normalized() * MAX_THROW_RANGE
+	grenades[grenade_type] = int(grenades[grenade_type]) - 1
+	_grenade_throw_timer = GRENADE_THROW_COOLDOWN
+	_update_grenades_ui()
+	match grenade_type:
+		"frag":
+			var g = FRAG_GRENADE_SCRIPT.new()
+			g.setup(global_position, target)
+			get_tree().current_scene.add_child(g)
+
+func add_grenade(grenade_type: String, amount: int) -> int:
+	# Returns how many were actually added after clamping to MAX_GRENADES_PER_TYPE.
+	var cur := int(grenades.get(grenade_type, 0))
+	var new_val: int = clamp(cur + amount, 0, MAX_GRENADES_PER_TYPE)
+	var added := new_val - cur
+	grenades[grenade_type] = new_val
+	_update_grenades_ui()
+	return added
+
+func _update_grenades_ui() -> void:
+	var label = get_tree().get_first_node_in_group("grenades_label")
+	if label:
+		label.text = "Granaty: %d / %d" % [int(grenades.get("frag", 0)), MAX_GRENADES_PER_TYPE]
 
 func _equip_weapon_by_id(id: String):
 	if not is_instance_valid(weapon_manager):
@@ -128,6 +176,8 @@ func _physics_process(delta):
 	
 	handle_knife_autoattack(delta)
 	handle_weapon_fire(delta)
+	if _grenade_throw_timer > 0.0:
+		_grenade_throw_timer = max(0.0, _grenade_throw_timer - delta)
 	#time_since_last_attack += delta
 	#if time_since_last_attack >= attack_cooldown:
 	#	var target = get_nearest_enemy()

@@ -684,6 +684,14 @@ offset_bottom = 259.0
 theme_override_font_sizes/font_size = 32
 text = "Kapsle: 0"
 
+[node name="GrenadesLabel" type="Label" parent="CanvasLayer" groups=["grenades_label"]]
+offset_left = 46.0
+offset_top = 184.0
+offset_right = 400.0
+offset_bottom = 229.0
+theme_override_font_sizes/font_size = 32
+text = "Granaty: 0 / 4"
+
 [node name="WaveLabel" type="Label" parent="CanvasLayer" unique_id=123456789 groups=["wave_label"]]
 offset_left = 46.0
 offset_top = 106.0

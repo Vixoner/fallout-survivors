@@ -23,25 +23,29 @@ const CLASSES = [
 		"id": "survivor",
 		"name": "OCALAŁY",
 		"description": "Wszechstronny bojownik pustkowi.",
-		"stats": {"strength":5,"perception":5,"endurance":5,"charisma":5,"intelligence":5,"agility":5,"luck":5}
+		"stats": {"strength":5,"perception":5,"endurance":5,"charisma":5,"intelligence":5,"agility":5,"luck":5},
+		"starting_grenades": {"frag": 2}
 	},
 	{
 		"id": "raider",
 		"name": "RAIDER",
 		"description": "Siła ponad wszystko.",
-		"stats": {"strength":9,"perception":3,"endurance":6,"charisma":3,"intelligence":3,"agility":6,"luck":5}
+		"stats": {"strength":9,"perception":3,"endurance":6,"charisma":3,"intelligence":3,"agility":6,"luck":5},
+		"starting_grenades": {"frag": 3}
 	},
 	{
 		"id": "gunslinger",
 		"name": "STRZELEC",
 		"description": "Precyzja ponad wszystko.",
-		"stats": {"strength":3,"perception":9,"endurance":4,"charisma":4,"intelligence":6,"agility":6,"luck":3}
+		"stats": {"strength":3,"perception":9,"endurance":4,"charisma":4,"intelligence":6,"agility":6,"luck":3},
+		"starting_grenades": {"frag": 1}
 	},
 	{
 		"id": "gambler",
 		"name": "HAZARDZISTA",
 		"description": "Fortuna sprzyja śmiałym.",
-		"stats": {"strength":3,"perception":3,"endurance":4,"charisma":7,"intelligence":5,"agility":5,"luck":8}
+		"stats": {"strength":3,"perception":3,"endurance":4,"charisma":7,"intelligence":5,"agility":5,"luck":8},
+		"starting_grenades": {"frag": 1}
 	},
 ]
 
