@@ -6,9 +6,13 @@ signal weapon_fired(weapon: WeaponData)
 
 var current_weapon: WeaponData = null
 var _cooldown: float = 0.0
+var _audio: AudioStreamPlayer = null
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_PAUSABLE
+	_audio = AudioStreamPlayer.new()
+	_audio.bus = "SFX"
+	add_child(_audio)
 
 func equip(weapon: WeaponData) -> void:
 	current_weapon = weapon
@@ -41,7 +45,14 @@ func fire(direction: Vector2) -> void:
 	else:
 		return
 	_cooldown = current_weapon.fire_rate
+	_play_fire_sound()
 	weapon_fired.emit(current_weapon)
+
+func _play_fire_sound() -> void:
+	if _audio == null or current_weapon == null or current_weapon.fire_sound == null:
+		return
+	_audio.stream = current_weapon.fire_sound
+	_audio.play()
 
 func _fire_beam(direction: Vector2) -> void:
 	var owner_node = get_parent()

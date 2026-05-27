@@ -75,6 +75,8 @@ func _input(event):
 			_equip_weapon_by_id("pistol")
 		elif event.keycode == KEY_2:
 			_equip_weapon_by_id("laser")
+		elif event.keycode == KEY_3:
+			_equip_weapon_by_id("plasma")
 
 func _equip_weapon_by_id(id: String):
 	if not is_instance_valid(weapon_manager):
@@ -86,6 +88,8 @@ func _equip_weapon_by_id(id: String):
 			weapon_manager.equip(WeaponData.make_pistol())
 		"laser":
 			weapon_manager.equip(WeaponData.make_laser())
+		"plasma":
+			weapon_manager.equip(WeaponData.make_plasma())
 
 func _physics_process(delta):
 	if movement_blocked:

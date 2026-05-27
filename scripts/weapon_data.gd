@@ -10,6 +10,7 @@ class_name WeaponData extends Resource
 @export var is_beam: bool = false
 @export var beam_length: float = 700.0
 @export var beam_width: float = 28.0
+@export var fire_sound: AudioStream
 
 static func make_pistol() -> WeaponData:
 	var w := WeaponData.new()
@@ -18,6 +19,7 @@ static func make_pistol() -> WeaponData:
 	w.fire_rate = 0.4
 	w.bullet_speed = 1350.0
 	w.bullet_scene = load("res://scenes/bullet.tscn")
+	w.fire_sound = load("res://assets/audio/weapons/pistol_fire.wav")
 	return w
 
 static func make_laser() -> WeaponData:
@@ -28,4 +30,15 @@ static func make_laser() -> WeaponData:
 	w.is_beam = true
 	w.beam_length = 1050.0
 	w.beam_width = 52.0
+	w.fire_sound = load("res://assets/audio/weapons/laser_fire.wav")
+	return w
+
+static func make_plasma() -> WeaponData:
+	var w := WeaponData.new()
+	w.name = "Plasma"
+	w.damage = 60
+	w.fire_rate = 1.1
+	w.bullet_speed = 520.0
+	w.bullet_scene = load("res://scenes/plasma_bolt.tscn")
+	w.fire_sound = load("res://assets/audio/weapons/plasma_fire.wav")
 	return w
