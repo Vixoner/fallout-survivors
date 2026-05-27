@@ -6,7 +6,7 @@ const C_BRIGHT   = Color(0.42, 1.00, 0.42)
 const C_BTN      = Color(0.05, 0.22, 0.05)
 const C_BTN_HOV  = Color(0.08, 0.34, 0.08)
 
-const GAME_SCENE = "res://scenes/main.tscn"
+const CLASS_SELECT_SCENE = "res://scenes/class_select.tscn"
 
 var _settings_panel = null
 
@@ -64,7 +64,7 @@ func _build_ui():
 	add_child(scanlines)
 
 func _on_start():
-	get_tree().change_scene_to_file(GAME_SCENE)
+	get_tree().change_scene_to_file(CLASS_SELECT_SCENE)
 
 func _on_options():
 	if is_instance_valid(_settings_panel):

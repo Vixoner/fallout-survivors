@@ -44,10 +44,24 @@ var luck: int = 5
 func _ready():
 	z_index = 6
 	process_mode = Node.PROCESS_MODE_PAUSABLE
+	_apply_class()
 	max_hp = get_max_hp()
 	current_hp = max_hp
 	_update_hp_bar()
 	_setup_weapon_manager()
+
+func _apply_class() -> void:
+	var cls: Dictionary = GameState.selected_class
+	if cls.is_empty():
+		return
+	var s: Dictionary = cls.get("stats", {})
+	strength     = s.get("strength",     strength)
+	perception   = s.get("perception",   perception)
+	endurance    = s.get("endurance",    endurance)
+	charisma     = s.get("charisma",     charisma)
+	intelligence = s.get("intelligence", intelligence)
+	agility      = s.get("agility",      agility)
+	luck         = s.get("luck",         luck)
 
 func _setup_weapon_manager():
 	weapon_manager = WeaponManager.new()
