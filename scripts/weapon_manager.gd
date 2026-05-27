@@ -37,8 +37,11 @@ func fire(direction: Vector2) -> void:
 		for i in count:
 			var angle := base_angle
 			if count > 1:
-				var t := float(i) / float(count - 1) - 0.5
-				angle += t * current_weapon.spread_angle
+				if current_weapon.spread_random:
+					angle += randf_range(-current_weapon.spread_angle * 0.5, current_weapon.spread_angle * 0.5)
+				else:
+					var t := float(i) / float(count - 1) - 0.5
+					angle += t * current_weapon.spread_angle
 			elif current_weapon.spread_angle > 0.0:
 				angle += randf_range(-current_weapon.spread_angle * 0.5, current_weapon.spread_angle * 0.5)
 			_spawn_bullet(origin, angle)

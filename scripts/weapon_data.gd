@@ -7,6 +7,7 @@ class_name WeaponData extends Resource
 @export var bullet_scene: PackedScene
 @export var spread_angle: float = 0.0
 @export var projectile_count: int = 1
+@export var spread_random: bool = false
 @export var is_beam: bool = false
 @export var beam_length: float = 700.0
 @export var beam_width: float = 28.0
@@ -41,4 +42,17 @@ static func make_plasma() -> WeaponData:
 	w.bullet_speed = 520.0
 	w.bullet_scene = load("res://scenes/plasma_bolt.tscn")
 	w.fire_sound = load("res://assets/audio/weapons/plasma_fire.wav")
+	return w
+
+static func make_shotgun() -> WeaponData:
+	var w := WeaponData.new()
+	w.name = "Shotgun"
+	w.damage = 9
+	w.fire_rate = 1.0
+	w.bullet_speed = 1150.0
+	w.bullet_scene = load("res://scenes/pellet.tscn")
+	w.projectile_count = 12
+	w.spread_angle = 0.55     # ~32° cone
+	w.spread_random = true    # random scatter within the cone per shot
+	w.fire_sound = load("res://assets/audio/weapons/shotgun_fire.wav")
 	return w

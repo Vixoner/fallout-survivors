@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/pellet.gd" id="1_pellet"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_pellet"]
+radius = 3.5
+
+[node name="Pellet" type="Area2D"]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1_pellet")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_pellet")
