@@ -14,6 +14,7 @@ const ENEMY_SCENES = {
 	"zombie_small": preload("res://scenes/enemy.tscn"),
 	"zombie_big":   preload("res://scenes/enemy_big.tscn"),
 	"zombie_boss":  preload("res://scenes/enemy_boss.tscn"),
+	"rat":          preload("res://scenes/rat.tscn"),
 }
 
 # Definicje fal: cooldown spawnu, rozmiar grupy, typy i liczba przeciwników
@@ -21,18 +22,22 @@ const ENEMY_SCENES = {
 const WAVES = [
 	{"cooldown": 3.0, "group_size": 3, "enemies": {
 		"zombie_small":  {"count": 10,  "champs": 0},
+		"rat":           {"count": 7,   "champs": 0},
 	}},
 	{"cooldown": 2.5, "group_size": 3, "enemies": {
-		"zombie_small": {"count": 13, "champs": 1},
+		"zombie_small": {"count": 15, "champs": 1},
 		"zombie_big":   {"count": 3,  "champs": 0},
+		"rat":          {"count": 8,  "champs": 0},
 	}},
 	{"cooldown": 2.0, "group_size": 4, "enemies": {
-		"zombie_small": {"count": 15, "champs": 3},
-		"zombie_big":   {"count": 4,  "champs": 1},
+		"zombie_small": {"count": 25, "champs": 3},
+		"zombie_big":   {"count": 6,  "champs": 1},
+		"rat":          {"count": 12,  "champs": 0},
 	}},
 	{"cooldown": 2.0, "group_size": 4, "enemies": {
-		"zombie_small": {"count": 20, "champs": 6},
-		"zombie_big":   {"count": 5,  "champs": 2},
+		"zombie_small": {"count": 30, "champs": 8},
+		"zombie_big":   {"count": 10,  "champs": 2},
+		"rat":          {"count": 15,  "champs": 1},
 	}},
 	{"cooldown": 1.5, "group_size": 5, "enemies": {
 		"zombie_boss":  {"count": 1,  "champs": 0},

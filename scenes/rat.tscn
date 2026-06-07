@@ -1,0 +1,155 @@
+[gd_scene format=3 uid="uid://cvkxfp73xfcnu"]
+
+[ext_resource type="Script" uid="uid://dv75qxd33a3i0" path="res://scripts/enemy.gd" id="1_rat_scr"]
+[ext_resource type="Texture2D" uid="uid://ddnsbc4j5dp5p" path="res://assets/sprites/Enemies/Rat/Rat_Death.png" id="2_3csnj"]
+[ext_resource type="Texture2D" uid="uid://b3hu0jmty774r" path="res://assets/sprites/Enemies/Rat/Rat_Attack.png" id="3_6s34g"]
+[ext_resource type="Texture2D" uid="uid://drhf4aema28d1" path="res://assets/sprites/Enemies/Rat/Rat_Run.png" id="4_368s2"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_rat"]
+radius = 28.0
+
+[sub_resource type="Animation" id="Animation_nnna8"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("BodySprite:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("2_3csnj")]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("BodySprite:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_po2hf"]
+resource_name = "attack_side"
+length = 0.6
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("BodySprite:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("3_6s34g")]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("BodySprite:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4, 5, 6]
+}
+
+[sub_resource type="Animation" id="Animation_0g0h3"]
+resource_name = "death_basic"
+length = 0.6
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("BodySprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("BodySprite:texture")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.6),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("2_3csnj")]
+}
+
+[sub_resource type="Animation" id="Animation_1ux2h"]
+resource_name = "run_side"
+length = 0.6
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("BodySprite:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("4_368s2")]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("BodySprite:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4, 5]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_rat"]
+_data = {
+&"RESET": SubResource("Animation_nnna8"),
+&"attack_side": SubResource("Animation_po2hf"),
+&"death_basic": SubResource("Animation_0g0h3"),
+&"run_side": SubResource("Animation_1ux2h")
+}
+
+[node name="Rat" type="CharacterBody2D" unique_id=1125683945 groups=["enemies"]]
+scale = Vector2(2, 2)
+collision_mask = 2
+script = ExtResource("1_rat_scr")
+max_health = 120
+move_speed = 460.0
+attack_damage = 4
+attack_cooldown = 0.8
+contact_distance = 75.0
+caps_drop_min = 1
+caps_drop_max = 3
+side_only_animations = true
+
+[node name="BodySprite" type="Sprite2D" parent="." unique_id=890236336]
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("2_3csnj")
+offset = Vector2(0, -10)
+hframes = 4
+vframes = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=596625018]
+shape = SubResource("CircleShape2D_rat")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1485183414]
+libraries/ = SubResource("AnimationLibrary_rat")

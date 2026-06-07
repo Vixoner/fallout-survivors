@@ -13,6 +13,12 @@ const HIT_SHADER = preload("res://assets/shaders/hit_flash.gdshader")
 @export var contact_distance: float = 65.0
 @export var caps_drop_min: int = 2
 @export var caps_drop_max: int = 4
+@export var attack_sound: AudioStream
+@export var death_sound: AudioStream
+# When true, enemy only has side-facing run/attack animations — they get
+# flipped horizontally for left and reused even when moving purely up/down.
+# Lets a variant ship with just 3 animations (run_side, attack_side, death_basic).
+@export var side_only_animations: bool = false
 
 var health: int
 var player = null
@@ -45,6 +51,7 @@ func _physics_process(delta):
 		if not fleeing and distance < contact_distance:
 			if attack_timer >= attack_cooldown:
 				play_attack_animation(direction)
+				_play_attack_sound()
 				player.take_damage(attack_damage)
 				attack_timer = 0.0
 
@@ -60,6 +67,10 @@ func is_currently_attacking() -> bool:
 	
 func play_attack_animation(direction: Vector2):
 	sprite.flip_h = false
+	if side_only_animations:
+		animation_player.play("attack_side")
+		sprite.flip_h = direction.x < 0
+		return
 	if abs(direction.y) > abs(direction.x):
 		if direction.y > 0:
 			animation_player.play("attack_down")
@@ -73,6 +84,10 @@ func play_attack_animation(direction: Vector2):
 			
 # DODANE: Funkcja zarządzająca animacją wroga
 func update_run_animation(direction: Vector2):
+	if side_only_animations:
+		animation_player.play("run_side")
+		sprite.flip_h = direction.x < 0
+		return
 	if abs(direction.y) > abs(direction.x):
 		sprite.flip_h = false
 		if direction.y > 0:
@@ -152,6 +167,7 @@ func die():
 	if _champion_tween:
 		_champion_tween.kill()
 		_champion_tween = null
+	_play_sfx_2d(death_sound)
 	animation_player.play("death_basic")
 	await get_tree().create_timer(1.2).timeout
 	if not is_instance_valid(self) or not is_inside_tree():
@@ -160,3 +176,21 @@ func die():
 	tween.tween_property(self, "modulate:a", 0.0, 0.8)
 	await tween.finished
 	queue_free()
+
+func _play_attack_sound() -> void:
+	_play_sfx_2d(attack_sound)
+
+func _play_sfx_2d(stream: AudioStream) -> void:
+	# 2D positional player parented to current_scene so the sound survives if
+	# the enemy despawns (e.g. dies mid-bite, or queue_free finishes before the
+	# death scream does). Routes through the SFX bus → respects the "Głośność
+	# efektów" slider. Null stream means this variant has no SFX assigned.
+	if stream == null:
+		return
+	var p := AudioStreamPlayer2D.new()
+	p.bus = "SFX"
+	p.stream = stream
+	p.autoplay = true
+	p.global_position = global_position
+	p.finished.connect(p.queue_free)
+	get_tree().current_scene.add_child(p)
