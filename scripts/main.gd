@@ -15,6 +15,7 @@ const ENEMY_SCENES = {
 	"zombie_big":   preload("res://scenes/enemy_big.tscn"),
 	"zombie_boss":  preload("res://scenes/enemy_boss.tscn"),
 	"rat":          preload("res://scenes/rat.tscn"),
+	"floater":      preload("res://scenes/floater.tscn"),
 }
 
 # Definicje fal: cooldown spawnu, rozmiar grupy, typy i liczba przeciwników
@@ -28,16 +29,19 @@ const WAVES = [
 		"zombie_small": {"count": 15, "champs": 1},
 		"zombie_big":   {"count": 3,  "champs": 0},
 		"rat":          {"count": 8,  "champs": 0},
+		"floater":      {"count": 2,  "champs": 0},
 	}},
 	{"cooldown": 2.0, "group_size": 4, "enemies": {
 		"zombie_small": {"count": 25, "champs": 3},
 		"zombie_big":   {"count": 6,  "champs": 1},
 		"rat":          {"count": 12,  "champs": 0},
+		"floater":      {"count": 3,  "champs": 0},
 	}},
 	{"cooldown": 2.0, "group_size": 4, "enemies": {
 		"zombie_small": {"count": 30, "champs": 8},
 		"zombie_big":   {"count": 10,  "champs": 2},
 		"rat":          {"count": 15,  "champs": 1},
+		"floater":      {"count": 4,  "champs": 1},
 	}},
 	{"cooldown": 1.5, "group_size": 5, "enemies": {
 		"zombie_boss":  {"count": 1,  "champs": 0},
@@ -68,7 +72,32 @@ func _ready():
 	player = get_tree().get_first_node_in_group("player")
 	if player:
 		player.game_over.connect(_on_player_game_over)
+	_start_music()
 	start_wave(0)
+
+func _start_music() -> void:
+	# Try .ogg first (best for looping), .mp3 as fallback. Bus = "Music" so
+	# the "Głośność muzyki" slider in SettingsPanel controls volume.
+	var candidate_paths := [
+		"res://assets/audio/music/metal_on_metal.ogg",
+		"res://assets/audio/music/metal_on_metal.mp3",
+	]
+	var stream: AudioStream = null
+	for path in candidate_paths:
+		if ResourceLoader.exists(path):
+			stream = load(path)
+			break
+	if stream == null:
+		push_warning("Background music not found at assets/audio/music/metal_on_metal.(ogg|mp3)")
+		return
+	if "loop" in stream:
+		stream.loop = true
+	var music_player := AudioStreamPlayer.new()
+	music_player.name = "MusicPlayer"
+	music_player.bus = "Music"
+	music_player.stream = stream
+	music_player.autoplay = true
+	add_child(music_player)
 
 func _input(event):
 	if event is InputEventKey and event.pressed and not event.echo:
