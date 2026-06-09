@@ -41,7 +41,7 @@ func _draw_visual() -> void:
 		var a := TAU * float(i) / float(n)
 		gpts.append(Vector2(cos(a), sin(a)) * gr)
 	glow.polygon = gpts
-	glow.color = Color(0.40, 0.95, 0.25, 0.45)
+	glow.color = Color(0.25, 0.55, 1.00, 0.45)
 	add_child(glow)
 
 	# Bright core
@@ -52,7 +52,7 @@ func _draw_visual() -> void:
 		var a := TAU * float(i) / float(n)
 		cpts.append(Vector2(cos(a), sin(a)) * cr)
 	core.polygon = cpts
-	core.color = Color(0.75, 1.0, 0.45, 0.95)
+	core.color = Color(0.55, 0.85, 1.0, 0.95)
 	add_child(core)
 
 	# Subtle gooey pulse

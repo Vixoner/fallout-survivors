@@ -563,13 +563,17 @@ radius = 50.0
 scale = Vector2(3.5, 3.5)
 collision_mask = 2
 script = ExtResource("1_script")
+ranged_range = null
+ranged_cooldown = null
+summon_interval = null
 max_health = 1000
 move_speed = 150.0
 attack_damage = 15
-attack_cooldown = 2.5
+attack_cooldown = 2.0
 contact_distance = 150.0
 caps_drop_min = 15
 caps_drop_max = 25
+side_only_animations = null
 
 [node name="BodySprite" type="Sprite2D" parent="." unique_id=200000002]
 scale = Vector2(3, 3)

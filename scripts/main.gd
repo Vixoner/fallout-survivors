@@ -28,23 +28,24 @@ const WAVES = [
 	{"cooldown": 2.5, "group_size": 3, "enemies": {
 		"zombie_small": {"count": 15, "champs": 1},
 		"zombie_big":   {"count": 3,  "champs": 0},
-		"rat":          {"count": 8,  "champs": 0},
+		"rat":          {"count": 12,  "champs": 0},
 		"floater":      {"count": 2,  "champs": 0},
 	}},
 	{"cooldown": 2.0, "group_size": 4, "enemies": {
 		"zombie_small": {"count": 25, "champs": 3},
 		"zombie_big":   {"count": 6,  "champs": 1},
-		"rat":          {"count": 12,  "champs": 0},
-		"floater":      {"count": 3,  "champs": 0},
+		"rat":          {"count": 18,  "champs": 0},
+		"floater":      {"count": 5,  "champs": 0},
 	}},
 	{"cooldown": 2.0, "group_size": 4, "enemies": {
 		"zombie_small": {"count": 30, "champs": 8},
 		"zombie_big":   {"count": 10,  "champs": 2},
-		"rat":          {"count": 15,  "champs": 1},
-		"floater":      {"count": 4,  "champs": 1},
+		"rat":          {"count": 20,  "champs": 1},
+		"floater":      {"count": 8,  "champs": 1},
 	}},
 	{"cooldown": 1.5, "group_size": 5, "enemies": {
 		"zombie_boss":  {"count": 1,  "champs": 0},
+		"floater":      {"count": 4,  "champs": 0},
 	}},
 ]
 

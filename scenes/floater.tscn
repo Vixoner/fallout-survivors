@@ -9,6 +9,9 @@
 scale = Vector2(2, 2)
 collision_mask = 2
 script = ExtResource("1_floater")
+max_health = 90
+move_speed = 180.0
+attack_cooldown = 1.6
 
 [node name="BodySprite" type="Sprite2D" parent="." unique_id=593510658]
 texture = ExtResource("2_bbueq")

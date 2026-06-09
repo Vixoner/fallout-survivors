@@ -1,19 +1,28 @@
 extends Control
 
+# Mode select screen — sits between the main menu and class select.
+# Story is wired to the existing gameplay (class_select → main.tscn).
+# Endless and Tutorial are mocked for now: they flash a "coming soon"
+# feedback when clicked but don't transition anywhere.
+
 const C_PANEL    = Color(0.02, 0.08, 0.02)
 const C_BORDER   = Color(0.18, 0.55, 0.18)
 const C_BRIGHT   = Color(0.42, 1.00, 0.42)
+const C_DIM      = Color(0.20, 0.55, 0.20)
 const C_BTN      = Color(0.05, 0.22, 0.05)
 const C_BTN_HOV  = Color(0.08, 0.34, 0.08)
 
-const MODE_SELECT_SCENE = "res://scenes/mode_select.tscn"
-
-var _settings_panel = null
+const CLASS_SELECT_SCENE = "res://scenes/class_select.tscn"
+const MAIN_MENU_SCENE    = "res://scenes/main_menu.tscn"
 
 func _ready():
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	SettingsPanel.load_and_apply()
 	_build_ui()
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ESCAPE:
+			get_tree().change_scene_to_file(MAIN_MENU_SCENE)
 
 func _build_ui():
 	var overlay := ColorRect.new()
@@ -31,30 +40,53 @@ func _build_ui():
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 16)
-	vbox.custom_minimum_size = Vector2(360, 0)
+	vbox.custom_minimum_size = Vector2(440, 0)
 	panel.add_child(vbox)
 
-	var title := _label("// FALLOUT SURVIVORS //", 38, C_BRIGHT)
+	var title := _label("// WYBÓR TRYBU //", 34, C_BRIGHT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(title)
 
 	vbox.add_child(_hsep())
 
-	var start_btn := _button("[ START ]", 22, C_BTN, C_BTN_HOV)
-	start_btn.custom_minimum_size = Vector2(0, 54)
-	start_btn.pressed.connect(_on_start)
-	vbox.add_child(start_btn)
+	# Story — wired to current gameplay.
+	var story_btn := _button("[ FABUŁA ]", 22, C_BTN, C_BTN_HOV)
+	story_btn.custom_minimum_size = Vector2(0, 54)
+	story_btn.pressed.connect(_on_story)
+	vbox.add_child(story_btn)
 
-	var options_btn := _button("[ OPCJE ]", 22, C_BTN, C_BTN_HOV)
-	options_btn.custom_minimum_size = Vector2(0, 54)
-	options_btn.pressed.connect(_on_options)
-	vbox.add_child(options_btn)
+	var story_desc := _label("Pięć fal, sklep między nimi, walka z bossem.", 13, C_DIM)
+	story_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(story_desc)
 
-	var exit_btn := _button("[ WYJŚCIE ]", 22, C_BTN, C_BTN_HOV)
-	exit_btn.custom_minimum_size = Vector2(0, 54)
-	exit_btn.pressed.connect(_on_exit)
-	vbox.add_child(exit_btn)
+	# Endless — mock.
+	var endless_btn := _button("[ PUSTKOWIA BEZ KOŃCA ]", 22, C_BTN, C_BTN_HOV)
+	endless_btn.custom_minimum_size = Vector2(0, 54)
+	endless_btn.pressed.connect(_on_endless.bind(endless_btn))
+	vbox.add_child(endless_btn)
 
+	var endless_desc := _label("Nieskończone fale, inny system rozwoju i sklep.", 13, C_DIM)
+	endless_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(endless_desc)
+
+	# Tutorial — mock.
+	var tutorial_btn := _button("[ SAMOUCZEK ]", 22, C_BTN, C_BTN_HOV)
+	tutorial_btn.custom_minimum_size = Vector2(0, 54)
+	tutorial_btn.pressed.connect(_on_tutorial.bind(tutorial_btn))
+	vbox.add_child(tutorial_btn)
+
+	var tutorial_desc := _label("Naucz się podstaw rozgrywki.", 13, C_DIM)
+	tutorial_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(tutorial_desc)
+
+	vbox.add_child(_hsep())
+
+	var back_btn := _button("[ WRÓĆ ]", 20, C_BTN, C_BTN_HOV)
+	back_btn.custom_minimum_size = Vector2(0, 50)
+	back_btn.pressed.connect(_on_back)
+	vbox.add_child(back_btn)
+
+	# Scanlines overlay (matches main_menu / class_select aesthetic)
 	var scanlines := ColorRect.new()
 	scanlines.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scanlines.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -63,18 +95,30 @@ func _build_ui():
 	scanlines.material = scan_mat
 	add_child(scanlines)
 
-func _on_start():
-	get_tree().change_scene_to_file(MODE_SELECT_SCENE)
+func _on_story() -> void:
+	get_tree().change_scene_to_file(CLASS_SELECT_SCENE)
 
-func _on_options():
-	if is_instance_valid(_settings_panel):
-		return
-	_settings_panel = SettingsPanel.new()
-	_settings_panel.closed.connect(func(): _settings_panel = null)
-	add_child(_settings_panel)
+func _on_endless(btn: Button) -> void:
+	_flash_coming_soon(btn)
 
-func _on_exit():
-	get_tree().quit()
+func _on_tutorial(btn: Button) -> void:
+	_flash_coming_soon(btn)
+
+func _on_back() -> void:
+	get_tree().change_scene_to_file(MAIN_MENU_SCENE)
+
+func _flash_coming_soon(btn: Button) -> void:
+	# Brief "coming soon" feedback on click without leaving the menu.
+	var original_text := btn.text
+	btn.text = "[ WKRÓTCE ]"
+	btn.disabled = true
+	var tween := create_tween()
+	tween.tween_interval(0.9)
+	tween.tween_callback(func() -> void:
+		if is_instance_valid(btn):
+			btn.text = original_text
+			btn.disabled = false
+	)
 
 func _label(text: String, font_size: int, color: Color) -> Label:
 	var lbl := Label.new()

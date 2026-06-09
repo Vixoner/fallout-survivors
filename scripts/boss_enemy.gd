@@ -3,6 +3,9 @@ extends "res://scripts/enemy.gd"
 const AXE_SCENE = preload("res://scenes/axe_projectile.tscn")
 const MINION_SCENE = preload("res://scenes/enemy.tscn")
 
+# Boss banner color palette (matches Pip-Boy / existing UI)
+const C_BOSS_BRIGHT := Color(0.42, 1.00, 0.42)
+
 @export var ranged_range: float = 800.0
 @export var ranged_cooldown: float = 3.0
 @export var summon_interval: float = 8.0
@@ -11,6 +14,12 @@ var ranged_timer: float = 0.0
 var summon_timer: float = 0.0
 var _is_ranged_attacking: bool = false
 var _minions: Array = []
+
+var _boss_label: Label = null
+
+func _ready() -> void:
+	super._ready()
+	_setup_boss_bar()
 
 func _physics_process(delta):
 	if is_dead:
@@ -67,11 +76,46 @@ func _start_ranged_attack(direction: Vector2):
 		return
 	_is_ranged_attacking = false
 
+func take_damage(amount, is_crit: bool = false):
+	super.take_damage(amount, is_crit)
+	_update_boss_bar()
+
 func die():
 	for minion in _minions:
 		if is_instance_valid(minion) and not minion.is_dead:
 			minion.die()
+	if is_instance_valid(_boss_label):
+		_boss_label.visible = false
 	super.die()
+
+func _setup_boss_bar() -> void:
+	var canvas := CanvasLayer.new()
+	canvas.name = "BossBarCanvas"
+	# Above the gameplay HUD (layer 1) but below the shop (10) / pause (20).
+	canvas.layer = 5
+	add_child(canvas)
+
+	_boss_label = Label.new()
+	_boss_label.add_theme_font_size_override("font_size", 40)
+	_boss_label.add_theme_color_override("font_color", C_BOSS_BRIGHT)
+	_boss_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	_boss_label.add_theme_constant_override("outline_size", 5)
+	_boss_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_label.anchor_left = 0.5
+	_boss_label.anchor_right = 0.5
+	_boss_label.anchor_top = 0.0
+	_boss_label.anchor_bottom = 0.0
+	_boss_label.offset_left = -400.0
+	_boss_label.offset_right = 400.0
+	_boss_label.offset_top = 30.0
+	_boss_label.offset_bottom = 90.0
+	_boss_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	canvas.add_child(_boss_label)
+	_update_boss_bar()
+
+func _update_boss_bar() -> void:
+	if is_instance_valid(_boss_label):
+		_boss_label.text = "// BOSS //   %d / %d" % [max(0, health), max_health]
 
 func _health_pct() -> float:
 	return clamp(float(health) / float(max_health), 0.0, 1.0)
