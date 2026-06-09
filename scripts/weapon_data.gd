@@ -13,6 +13,14 @@ class_name WeaponData extends Resource
 @export var beam_width: float = 28.0
 @export var fire_sound: AudioStream
 
+# Endless-mode upgrade flags / DoT params (applied by player._build_weapon_data).
+@export var splitter: bool = false           # Laser: also fire ±45° side beams at 60% damage
+@export var dot_radius: float = 90.0          # Plasma DoT puddle radius
+@export var dot_duration: float = 2.5         # Plasma DoT puddle duration
+@export var dot_tick_interval: float = 0.4
+@export var dot_tick_damage: int = 8
+@export var dot_slow: float = 0.0             # Plasma Lepka: slow multiplier in AoE (0 = none, 0.5 = halve)
+
 static func make_pistol() -> WeaponData:
 	var w := WeaponData.new()
 	w.name = "Pistol"

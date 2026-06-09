@@ -66,6 +66,39 @@ var _cards_hbox: HBoxContainer = null
 var _caps_label: Label = null
 var _reroll_cost_lbl: Label = null
 
+# Endless mode adds an extra card row for weapon upgrades. Set by endless.gd
+# before adding the shop as a child.
+var endless_mode: bool = false
+
+# Weapon upgrades catalogue: id → metadata. `exclusive_with` lists upgrade ids
+# that can't be owned simultaneously (mutually-exclusive mechanic changes).
+const WEAPON_UPGRADES = [
+	{"id": "pistol_long_barrel",  "weapon": "pistol",  "name": "WYDŁUŻONA LUFA",
+		"desc": "+30% prędkości pocisku, +25% obrażeń pistoletu.",
+		"cost": 30, "exclusive_with": []},
+	{"id": "pistol_magnum",       "weapon": "pistol",  "name": "MAGNUM",
+		"desc": "+50% obrażeń pistoletu, szybkostrzelność ÷ 1.4.",
+		"cost": 35, "exclusive_with": []},
+	{"id": "laser_splitter",      "weapon": "laser",   "name": "DZIELNIK WIĄZKI",
+		"desc": "Dwie dodatkowe wiązki pod kątem ±45° (60% obrażeń każda).",
+		"cost": 45, "exclusive_with": ["laser_focused"]},
+	{"id": "laser_focused",       "weapon": "laser",   "name": "SKUPIONA SOCZEWKA",
+		"desc": "Wiązka 2× dłuższa, +25% obrażeń, węższy obszar trafienia.",
+		"cost": 45, "exclusive_with": ["laser_splitter"]},
+	{"id": "plasma_stabilizer",   "weapon": "plasma",  "name": "STABILIZATOR",
+		"desc": "Obrażenia bezpośrednie 60 → 110, +30% prędkości pocisku, AoE bez zmian.",
+		"cost": 40, "exclusive_with": []},
+	{"id": "plasma_sticky",       "weapon": "plasma",  "name": "LEPKA PLAZMA",
+		"desc": "AoE 90 → 160, czas 2.5 → 4.0s, -50% prędkości wrogów w obszarze.",
+		"cost": 40, "exclusive_with": []},
+	{"id": "shotgun_choke",       "weapon": "shotgun", "name": "ZWĘŻKA",
+		"desc": "Stożek 32° → 18°, +35% obrażeń śrutu.",
+		"cost": 38, "exclusive_with": ["shotgun_autoload"]},
+	{"id": "shotgun_autoload",    "weapon": "shotgun", "name": "AUTOŁADOWANIE",
+		"desc": "Szybkostrzelność 1.0 → 0.6s, liczba śrutów 12 → 8.",
+		"cost": 38, "exclusive_with": ["shotgun_choke"]},
+]
+
 func setup(player: Node):
 	_player = player
 
@@ -234,6 +267,97 @@ func _spawn_cards():
 	pool.shuffle()
 	for item in pool.slice(0, 3):
 		_cards_hbox.add_child(_make_card(item))
+	if endless_mode:
+		_spawn_upgrade_cards()
+
+func _spawn_upgrade_cards():
+	# A second row of weapon-upgrade cards. Filter to upgrades the player
+	# doesn't yet own and isn't blocked from owning by exclusivity.
+	if _player == null or not "weapon_upgrades" in _player:
+		return
+	var owned: Array = _player.weapon_upgrades
+	var available: Array = []
+	for upg in WEAPON_UPGRADES:
+		if upg["id"] in owned:
+			continue
+		var blocked := false
+		for ex in upg.get("exclusive_with", []):
+			if ex in owned:
+				blocked = true
+				break
+		if blocked:
+			continue
+		available.append(upg)
+	available.shuffle()
+	if available.is_empty():
+		return
+	# Header separator
+	var sep_lbl := _label("// MODYFIKACJE BRONI //", 17, C_BRIGHT)
+	sep_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_cards_hbox.get_parent().add_child(sep_lbl)
+	var upg_hbox := HBoxContainer.new()
+	upg_hbox.add_theme_constant_override("separation", 16)
+	upg_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_cards_hbox.get_parent().add_child(upg_hbox)
+	for upg in available.slice(0, 3):
+		upg_hbox.add_child(_make_upgrade_card(upg))
+
+func _make_upgrade_card(upg: Dictionary) -> Control:
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_theme_stylebox_override("panel", _flat(C_CARD, C_BORDER, 1, 2, 14, 14))
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	card.add_child(vbox)
+
+	var type_lbl := _label("[ %s ]" % str(upg["weapon"]).to_upper(), 11, C_TAG)
+	type_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(type_lbl)
+
+	var name_lbl := _label(upg["name"], 17, C_BRIGHT)
+	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(name_lbl)
+
+	vbox.add_child(_hsep())
+
+	var desc_lbl := _label(upg["desc"], 12, C_MID)
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_child(desc_lbl)
+
+	var actual_cost: int = _get_actual_cost(int(upg["cost"]))
+	var cost_text := "KOSZT: %d KAPSLI" % actual_cost
+	var cost_lbl := _label(cost_text, 13, C_CAPS)
+	cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(cost_lbl)
+
+	vbox.add_child(_hsep())
+
+	var buy_btn := _button("[ KUP ]", 16, C_BTN_BUY, C_BTN_HOV)
+	buy_btn.custom_minimum_size = Vector2(0, 40)
+	buy_btn.pressed.connect(_on_buy_upgrade.bind(upg, buy_btn, cost_lbl, actual_cost))
+	vbox.add_child(buy_btn)
+	return card
+
+func _on_buy_upgrade(upg: Dictionary, btn: Button, cost_lbl: Label, actual_cost: int):
+	if _player == null or btn.disabled:
+		return
+	if _player.caps < actual_cost:
+		var tween = create_tween()
+		tween.tween_property(cost_lbl, "modulate", Color(1, 0.2, 0.2), 0.08)
+		tween.tween_property(cost_lbl, "modulate", Color(1, 1, 1), 0.25)
+		return
+	_player.caps -= actual_cost
+	_player.add_caps(0)
+	if _player.has_method("add_weapon_upgrade"):
+		_player.add_weapon_upgrade(str(upg["id"]))
+	_caps_label.text = "KAPSLE: %d" % _player.caps
+	btn.text = "[ KUPIONO ]"
+	btn.disabled = true
+	btn.add_theme_stylebox_override("normal", _flat(C_BOUGHT, C_DIM, 1, 2))
+	btn.add_theme_stylebox_override("hover",  _flat(C_BOUGHT, C_DIM, 1, 2))
 
 func _on_reroll(_btn: Button):
 	if _player == null:

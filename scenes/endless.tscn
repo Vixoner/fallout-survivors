@@ -1,0 +1,104 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/endless.gd" id="1_endl"]
+[ext_resource type="PackedScene" uid="uid://d3msx4t4u7728" path="res://scenes/player.tscn" id="2_pl"]
+[ext_resource type="Texture2D" uid="uid://die680jh4nr8v" path="res://waste.png" id="3_floor"]
+[ext_resource type="Texture2D" uid="uid://dgupdmmlfpwsq" path="res://assets/sprites/HP-Bar.png" id="4_hpbar"]
+[ext_resource type="Texture2D" path="res://assets/sprites/HP.png" id="5_hpfill"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xpbg"]
+bg_color = Color(0.03, 0.11, 0.03, 1)
+border_color = Color(0.18, 0.55, 0.18, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xpfg"]
+bg_color = Color(0.42, 1.00, 0.42, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="Endless" type="Node2D"]
+script = ExtResource("1_endl")
+
+[node name="Floor" type="Sprite2D" parent="."]
+texture_repeat = 2
+position = Vector2(-26, 2)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("3_floor")
+region_enabled = true
+region_rect = Rect2(0, 0, 15000, 10000)
+
+[node name="Player" parent="." instance=ExtResource("2_pl")]
+scale = Vector2(2, 2)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="CapsLabel" type="Label" parent="CanvasLayer" groups=["caps_label"]]
+offset_left = 46.0
+offset_top = 145.0
+offset_right = 355.0
+offset_bottom = 259.0
+theme_override_font_sizes/font_size = 32
+text = "Kapsle: 0"
+
+[node name="GrenadesLabel" type="Label" parent="CanvasLayer" groups=["grenades_label"]]
+offset_left = 46.0
+offset_top = 184.0
+offset_right = 400.0
+offset_bottom = 229.0
+theme_override_font_sizes/font_size = 32
+text = "Granaty: 0 / 4"
+
+[node name="LevelLabel" type="Label" parent="CanvasLayer" groups=["level_label"]]
+offset_left = 46.0
+offset_top = 106.0
+offset_right = 400.0
+offset_bottom = 151.0
+theme_override_font_sizes/font_size = 32
+text = "Poziom: 1"
+
+[node name="XPBar" type="ProgressBar" parent="CanvasLayer" groups=["xp_bar"]]
+offset_left = 46.0
+offset_top = 230.0
+offset_right = 360.0
+offset_bottom = 255.0
+theme_override_styles/background = SubResource("StyleBoxFlat_xpbg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_xpfg")
+show_percentage = false
+max_value = 150.0
+value = 0.0
+
+[node name="XPLabel" type="Label" parent="CanvasLayer" groups=["xp_label"]]
+offset_left = 46.0
+offset_top = 260.0
+offset_right = 360.0
+offset_bottom = 285.0
+theme_override_font_sizes/font_size = 18
+text = "PD: 0 / 150"
+
+[node name="TextureProgressBar" type="TextureProgressBar" parent="CanvasLayer" groups=["hp_bar"]]
+offset_left = 42.0
+offset_top = 31.0
+offset_right = 97.0
+offset_bottom = 71.0
+scale = Vector2(6, 6)
+max_value = 20.0
+value = 20.0
+texture_over = ExtResource("4_hpbar")
+texture_progress = ExtResource("5_hpfill")
+texture_progress_offset = Vector2(10, 4)
+
+[node name="HpLabel" type="Label" parent="CanvasLayer" groups=["hp_label"]]
+offset_left = 212.0
+offset_top = 56.0
+offset_right = 255.0
+offset_bottom = 79.0
+text = "20/20"

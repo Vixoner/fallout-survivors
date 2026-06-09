@@ -12,8 +12,9 @@ const C_DIM      = Color(0.20, 0.55, 0.20)
 const C_BTN      = Color(0.05, 0.22, 0.05)
 const C_BTN_HOV  = Color(0.08, 0.34, 0.08)
 
-const CLASS_SELECT_SCENE = "res://scenes/class_select.tscn"
-const MAIN_MENU_SCENE    = "res://scenes/main_menu.tscn"
+const CLASS_SELECT_SCENE  = "res://scenes/class_select.tscn"
+const WEAPON_SELECT_SCENE = "res://scenes/weapon_select.tscn"
+const MAIN_MENU_SCENE     = "res://scenes/main_menu.tscn"
 
 func _ready():
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -96,10 +97,13 @@ func _build_ui():
 	add_child(scanlines)
 
 func _on_story() -> void:
+	# Ensure no stale endless flag leaks into story.
+	GameState.endless_mode = false
 	get_tree().change_scene_to_file(CLASS_SELECT_SCENE)
 
-func _on_endless(btn: Button) -> void:
-	_flash_coming_soon(btn)
+func _on_endless(_btn: Button) -> void:
+	GameState.endless_mode = true
+	get_tree().change_scene_to_file(WEAPON_SELECT_SCENE)
 
 func _on_tutorial(btn: Button) -> void:
 	_flash_coming_soon(btn)

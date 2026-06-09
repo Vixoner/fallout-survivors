@@ -59,15 +59,33 @@ func _play_fire_sound() -> void:
 
 func _fire_beam(direction: Vector2) -> void:
 	var owner_node = get_parent()
+	var crit_mult: float = 2.0
+	if owner_node and owner_node.has_method("get_crit_mult"):
+		crit_mult = float(owner_node.get_crit_mult())
 	var crit: bool = owner_node and owner_node.has_method("roll_crit") and owner_node.roll_crit()
 	var dmg := current_weapon.damage
 	if owner_node and owner_node.has_method("get_ranged_damage_mult"):
 		dmg = int(round(dmg * owner_node.get_ranged_damage_mult()))
 	if crit:
-		dmg *= 2
+		dmg = int(round(dmg * crit_mult))
+
+	var base_dir: Vector2 = direction.normalized()
+	var origin: Vector2 = _get_muzzle_position()
+	var scene_root := get_tree().current_scene
+
+	if current_weapon.splitter:
+		# Main beam at full damage, two angled beams at ±45° with 60% damage.
+		_spawn_beam(scene_root, origin, base_dir, dmg, crit)
+		var side_dmg: int = int(round(dmg * 0.6))
+		_spawn_beam(scene_root, origin, base_dir.rotated(deg_to_rad(45.0)), side_dmg, crit)
+		_spawn_beam(scene_root, origin, base_dir.rotated(deg_to_rad(-45.0)), side_dmg, crit)
+	else:
+		_spawn_beam(scene_root, origin, base_dir, dmg, crit)
+
+func _spawn_beam(scene_root: Node, origin: Vector2, direction: Vector2, dmg: int, crit: bool) -> void:
 	var beam = LASER_BEAM_SCRIPT.new()
-	beam.configure(_get_muzzle_position(), direction.normalized(), current_weapon.beam_length, dmg, current_weapon.beam_width, crit)
-	get_tree().current_scene.add_child(beam)
+	beam.configure(origin, direction, current_weapon.beam_length, dmg, current_weapon.beam_width, crit)
+	scene_root.add_child(beam)
 
 func _get_muzzle_position() -> Vector2:
 	var owner_node = get_parent()
@@ -83,6 +101,9 @@ func _spawn_bullet(origin: Vector2, angle: float) -> void:
 	bullet.global_position = origin
 	bullet.rotation = angle
 	var owner_node = get_parent()
+	var crit_mult: float = 2.0
+	if owner_node and owner_node.has_method("get_crit_mult"):
+		crit_mult = float(owner_node.get_crit_mult())
 	if "speed" in bullet:
 		bullet.speed = current_weapon.bullet_speed
 	if "damage" in bullet:
@@ -91,9 +112,20 @@ func _spawn_bullet(origin: Vector2, angle: float) -> void:
 		if owner_node and owner_node.has_method("get_ranged_damage_mult"):
 			dmg = int(round(dmg * owner_node.get_ranged_damage_mult()))
 		if crit:
-			dmg *= 2
+			dmg = int(round(dmg * crit_mult))
 		bullet.damage = dmg
 		if "is_crit" in bullet:
 			bullet.is_crit = crit
+	# Plasma DoT override from WeaponData (Lepka Plazma upgrade tweaks these).
+	if "dot_radius" in bullet:
+		bullet.dot_radius = current_weapon.dot_radius
+	if "dot_duration" in bullet:
+		bullet.dot_duration = current_weapon.dot_duration
+	if "dot_tick_interval" in bullet:
+		bullet.dot_tick_interval = current_weapon.dot_tick_interval
+	if "dot_tick_damage" in bullet:
+		bullet.dot_tick_damage = current_weapon.dot_tick_damage
+	if "dot_slow" in bullet:
+		bullet.dot_slow = current_weapon.dot_slow
 	var scene_root = get_tree().current_scene
 	scene_root.add_child(bullet)

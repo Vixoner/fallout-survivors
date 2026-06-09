@@ -16,6 +16,7 @@ var dot_radius: float = 90.0
 var dot_duration: float = 2.5
 var dot_tick_interval: float = 0.4
 var dot_tick_damage: int = 8
+var dot_slow: float = 0.0  # Lepka Plazma slow multiplier (e.g. 0.5 = halve speed)
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_PAUSABLE
@@ -38,6 +39,8 @@ func _on_body_entered(body) -> void:
 func _spawn_dot() -> void:
 	var dot = DOT_SCRIPT.new()
 	dot.configure(dot_radius, dot_duration, dot_tick_interval, dot_tick_damage)
+	if "slow_amount" in dot:
+		dot.slow_amount = dot_slow
 	dot.global_position = global_position
 	get_tree().current_scene.add_child(dot)
 

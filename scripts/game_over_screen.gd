@@ -10,6 +10,9 @@ const C_BTN_HOV = Color(0.08, 0.34, 0.08)
 
 var zombies_killed: int = 0
 var elapsed_time: float = 0.0
+# Endless-only — both default to "not set" so story leaves them out.
+var level_reached: int = 0
+var perks_taken: Array = []
 
 func _ready():
 	layer = 110
@@ -80,7 +83,20 @@ func _build_ui():
 
 	stats_vbox.add_child(_stat_row("CZAS PRZEŻYCIA", _format_time(elapsed_time)))
 	stats_vbox.add_child(_hsep())
-	stats_vbox.add_child(_stat_row("POKONANYCH ZOMBIE", str(zombies_killed)))
+	stats_vbox.add_child(_stat_row("POKONANYCH WROGÓW", str(zombies_killed)))
+	if level_reached > 0:
+		stats_vbox.add_child(_hsep())
+		stats_vbox.add_child(_stat_row("OSIĄGNIĘTY POZIOM", str(level_reached)))
+	if not perks_taken.is_empty():
+		stats_vbox.add_child(_hsep())
+		var perks_hdr := _label("PERKI", 16, C_MID)
+		perks_hdr.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		stats_vbox.add_child(perks_hdr)
+		for perk_id in perks_taken:
+			var entry: Dictionary = Perks.get_by_id(str(perk_id))
+			var perk_name: String = entry.get("name", str(perk_id))
+			var p_lbl := _label("• " + perk_name, 14, C_BRIGHT)
+			stats_vbox.add_child(p_lbl)
 
 	vbox.add_child(_hsep())
 

@@ -1,10 +1,14 @@
 extends CharacterBody2D
 
 signal game_over
+# Endless-mode signals — story mode never emits these.
+signal xp_changed(xp: int, xp_to_next: int)
+signal level_up_triggered(new_level: int, points_to_spend: int, show_perk_panel: bool, boss_phase: bool)
 
 const BASE_SPEED = 500.0
 const BASE_HP    = 20
 const PLAYER_SIZE = 64
+const BASE_GRENADE_CAP = 4
 
 @onready var attack_range = $AttackRange
 @onready var body_sprite = $BodySprite
@@ -33,14 +37,13 @@ var last_direction = "down"
 var weapon_manager: WeaponManager = null
 
 const FRAG_GRENADE_SCRIPT := preload("res://scripts/frag_grenade.gd")
-const MAX_GRENADES_PER_TYPE := 4
 const GRENADE_THROW_COOLDOWN := 0.35
 const MAX_THROW_RANGE := 900.0
 
 var grenades: Dictionary = {"frag": 0}
 var _grenade_throw_timer: float = 0.0
 
-# Statystyki SPECIAL
+# Statystyki SPECIAL — story defaults to 5 each; endless starts all at 1.
 var strength: int = 5
 var perception: int = 5
 var endurance: int = 5
@@ -48,6 +51,17 @@ var charisma: int = 5
 var intelligence: int = 5
 var agility: int = 5
 var luck: int = 5
+
+# ── Endless-mode state ────────────────────────────────────────────────────────
+var _endless_mode: bool = false
+var xp: int = 0
+var level: int = 1
+var xp_to_next: int = 150  # 100 + 50 * level
+var pending_stat_points: int = 0
+var perks: Array[String] = []
+var weapon_upgrades: Array[String] = []
+const STAT_CAP_ENDLESS := 99
+const SPEED_CAP_ENDLESS := 600.0
 
 func _ready():
 	z_index = 6
@@ -59,6 +73,24 @@ func _ready():
 	_setup_weapon_manager()
 
 func _apply_class() -> void:
+	# Endless overrides classes entirely — all SPECIAL start at 1, no starting grenades.
+	if GameState.endless_mode:
+		_endless_mode = true
+		strength = 1
+		perception = 1
+		endurance = 1
+		charisma = 1
+		intelligence = 1
+		agility = 1
+		luck = 1
+		xp = 0
+		level = 1
+		xp_to_next = 100 + 50 * level
+		pending_stat_points = 0
+		perks = []
+		grenades = {"frag": 0}
+		_update_grenades_ui()
+		return
 	var cls: Dictionary = GameState.selected_class
 	if cls.is_empty():
 		_update_grenades_ui()
@@ -73,14 +105,149 @@ func _apply_class() -> void:
 	luck         = s.get("luck",         luck)
 	var starting_grenades: Dictionary = cls.get("starting_grenades", {})
 	for gtype in starting_grenades:
-		grenades[gtype] = clamp(int(starting_grenades[gtype]), 0, MAX_GRENADES_PER_TYPE)
+		grenades[gtype] = clamp(int(starting_grenades[gtype]), 0, get_grenade_cap())
 	_update_grenades_ui()
+
+# ── Endless XP / level-up plumbing ────────────────────────────────────────────
+# Called by endless.gd whenever an enemy dies. Amount already includes
+# per-enemy XP value and any Psychopath multiplier.
+func add_xp(amount: int) -> void:
+	if not _endless_mode or is_dying:
+		return
+	xp += amount
+	while xp >= xp_to_next:
+		xp -= xp_to_next
+		_level_up()
+	emit_signal("xp_changed", xp, xp_to_next)
+
+func _level_up() -> void:
+	level += 1
+	pending_stat_points += 5
+	xp_to_next = 100 + 50 * level
+	# Full heal on level-up. Recompute max in case endurance just changed
+	# (though normally stats change after the panel opens — this is a safety net).
+	max_hp = get_max_hp()
+	current_hp = max_hp
+	_update_hp_bar()
+	var show_perk: bool = (level % 3 == 0)
+	var boss_phase: bool = (level % 10 == 0)
+	emit_signal("level_up_triggered", level, 5, show_perk, boss_phase)
+
+# Spend a single allocated point. Returns true if applied.
+func spend_stat_point(stat: String) -> bool:
+	if pending_stat_points <= 0:
+		return false
+	if not stat in ["strength", "perception", "endurance", "charisma", "intelligence", "agility", "luck"]:
+		return false
+	var cur: int = get(stat)
+	if cur >= STAT_CAP_ENDLESS:
+		return false
+	set(stat, cur + 1)
+	pending_stat_points -= 1
+	recalculate_stats()
+	return true
+
+# Refund an unconfirmed allocation (used by the panel's − button).
+func refund_stat_point(stat: String, baseline: int) -> bool:
+	var cur: int = get(stat)
+	if cur <= baseline:
+		return false
+	set(stat, cur - 1)
+	pending_stat_points += 1
+	recalculate_stats()
+	return true
+
+func add_perk(perk_id: String) -> void:
+	if perk_id in perks:
+		return
+	perks.append(perk_id)
+	# Some perks change passive values immediately.
+	recalculate_stats()
+	# Pistol fire-rate halving via Desperado applies on next equip — re-equip
+	# now to apply instantly if pistol is currently held.
+	if perk_id == "desperado" and is_instance_valid(weapon_manager):
+		var cw = weapon_manager.current_weapon
+		if cw != null and str(cw.name).to_lower() == "pistol":
+			weapon_manager.equip(_build_weapon_data("pistol"))
+
+func has_perk(perk_id: String) -> bool:
+	return perk_id in perks
+
+func has_weapon_upgrade(id: String) -> bool:
+	return id in weapon_upgrades
+
+func add_weapon_upgrade(id: String) -> void:
+	if id in weapon_upgrades:
+		return
+	weapon_upgrades.append(id)
+	# Re-equip the currently held weapon to pick up the new modifiers (if it's
+	# the same kind the upgrade applies to).
+	if is_instance_valid(weapon_manager) and weapon_manager.current_weapon:
+		var cur_id: String = str(weapon_manager.current_weapon.name).to_lower()
+		weapon_manager.equip(_build_weapon_data(cur_id))
+
+# Endless: called by endless.gd on every enemy kill for Wampir.
+func on_enemy_killed(_enemy_type: String) -> void:
+	if has_perk("wampir") and current_hp < int(max_hp * 0.5):
+		current_hp = min(current_hp + 1, max_hp)
+		_update_hp_bar()
+
+func get_grenade_cap() -> int:
+	return BASE_GRENADE_CAP + (2 if has_perk("hodowca_granatow") else 0)
 
 func _setup_weapon_manager():
 	weapon_manager = WeaponManager.new()
 	weapon_manager.name = "WeaponManager"
 	add_child(weapon_manager)
-	weapon_manager.equip(WeaponData.make_pistol())
+	# Endless lets the player pick a starting weapon; story always starts with pistol.
+	var starting: String = "pistol"
+	if _endless_mode and GameState.endless_starting_weapon != "":
+		starting = GameState.endless_starting_weapon
+	weapon_manager.equip(_build_weapon_data(starting))
+
+# Builds a WeaponData instance for the given id and applies any active perks
+# + endless weapon upgrades that modify weapon parameters.
+func _build_weapon_data(id: String) -> WeaponData:
+	var w: WeaponData = null
+	match id:
+		"pistol":
+			w = WeaponData.make_pistol()
+			if has_perk("desperado"):
+				w.fire_rate *= 0.5
+			if has_weapon_upgrade("pistol_long_barrel"):
+				w.bullet_speed *= 1.3
+				w.damage = int(round(w.damage * 1.25))
+			if has_weapon_upgrade("pistol_magnum"):
+				w.damage = int(round(w.damage * 1.5))
+				w.fire_rate *= 1.4
+		"laser":
+			w = WeaponData.make_laser()
+			if has_weapon_upgrade("laser_focused"):
+				w.beam_length *= 2.0
+				w.damage = int(round(w.damage * 1.25))
+				w.beam_width *= 0.6
+			if has_weapon_upgrade("laser_splitter"):
+				w.splitter = true
+		"plasma":
+			w = WeaponData.make_plasma()
+			if has_weapon_upgrade("plasma_stabilizer"):
+				w.damage = 110
+				w.bullet_speed *= 1.3
+			if has_weapon_upgrade("plasma_sticky"):
+				w.dot_radius = 160.0
+				w.dot_duration = 4.0
+				w.dot_slow = 0.5
+		"shotgun":
+			w = WeaponData.make_shotgun()
+			if has_weapon_upgrade("shotgun_choke"):
+				w.spread_angle = 0.31  # ~18°
+				w.damage = int(round(w.damage * 1.35))
+			if has_weapon_upgrade("shotgun_autoload"):
+				w.fire_rate = 0.6
+				w.projectile_count = 8
+		_:
+			w = WeaponData.make_pistol()
+	return w
 
 func _input(event):
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -115,9 +282,9 @@ func _throw_grenade(grenade_type: String) -> void:
 			get_tree().current_scene.add_child(g)
 
 func add_grenade(grenade_type: String, amount: int) -> int:
-	# Returns how many were actually added after clamping to MAX_GRENADES_PER_TYPE.
+	# Returns how many were actually added after clamping to grenade cap.
 	var cur := int(grenades.get(grenade_type, 0))
-	var new_val: int = clamp(cur + amount, 0, MAX_GRENADES_PER_TYPE)
+	var new_val: int = clamp(cur + amount, 0, get_grenade_cap())
 	var added := new_val - cur
 	grenades[grenade_type] = new_val
 	_update_grenades_ui()
@@ -126,22 +293,15 @@ func add_grenade(grenade_type: String, amount: int) -> int:
 func _update_grenades_ui() -> void:
 	var label = get_tree().get_first_node_in_group("grenades_label")
 	if label:
-		label.text = "Granaty: %d / %d" % [int(grenades.get("frag", 0)), MAX_GRENADES_PER_TYPE]
+		label.text = "Granaty: %d / %d" % [int(grenades.get("frag", 0)), get_grenade_cap()]
 
 func _equip_weapon_by_id(id: String):
 	if not is_instance_valid(weapon_manager):
 		return
 	if weapon_manager.current_weapon and weapon_manager.current_weapon.name.to_lower() == id:
 		return
-	match id:
-		"pistol":
-			weapon_manager.equip(WeaponData.make_pistol())
-		"laser":
-			weapon_manager.equip(WeaponData.make_laser())
-		"plasma":
-			weapon_manager.equip(WeaponData.make_plasma())
-		"shotgun":
-			weapon_manager.equip(WeaponData.make_shotgun())
+	if id in ["pistol", "laser", "plasma", "shotgun"]:
+		weapon_manager.equip(_build_weapon_data(id))
 
 func _physics_process(delta):
 	if movement_blocked:
@@ -198,7 +358,7 @@ func handle_knife_autoattack(delta):
 			# Zadajemy obrażenia
 			var is_crit = roll_crit()
 			var base_dmg = get_melee_damage()
-			var dmg = base_dmg * 2 if is_crit else base_dmg
+			var dmg = int(round(base_dmg * get_crit_mult())) if is_crit else base_dmg
 			target.take_damage(dmg, is_crit)
 			
 			# Resetujemy tylko stoper noża
@@ -272,28 +432,70 @@ func get_nearest_enemy():
 	#target.take_damage(40)
 	
 func get_move_speed() -> float:
+	if _endless_mode:
+		var raw_speed: float = min(SPEED_CAP_ENDLESS, 400.0 + (agility - 1) * 10.0)
+		if has_perk("lekka_stopa"):
+			raw_speed *= 1.2
+		return raw_speed
 	return BASE_SPEED + (agility - 5) * 40.0
 
 func get_max_hp() -> int:
+	if _endless_mode:
+		return BASE_HP + (endurance - 1) * 2
 	return BASE_HP + (endurance - 5) * 3
 
 func get_damage_reduction() -> float:
+	if _endless_mode:
+		var dr: float = clamp((endurance - 1) * 0.008, 0.0, 0.75)
+		if has_perk("twardziel"):
+			dr = min(0.90, dr + 0.15)
+		return dr
 	return clamp((endurance - 5) * 0.08, -0.5, 0.5)
 
 func get_attract_radius() -> float:
+	if _endless_mode:
+		return 150.0 + (intelligence - 1) * 15.0
 	return 200.0 + (intelligence - 5) * 25.0
 
 func get_price_mult() -> float:
+	if _endless_mode:
+		return clamp(1.0 - (charisma - 1) * 0.01, 0.3, 1.5)
 	return clamp(1.0 - (charisma - 5) * 0.05, 0.4, 1.5)
 
 func get_melee_damage() -> int:
-	return 15 + strength * 3  # strength=5 → 40, każdy punkt = +3 dmg
+	var base: float
+	if _endless_mode:
+		base = 10.0 + strength * 2.5
+	else:
+		base = 15.0 + strength * 3.0
+	if has_perk("rzeznik"):
+		base *= 1.30
+	return int(round(base))
 
 func get_crit_chance() -> float:
-	return luck * 0.03  # 3% na punkt, bazowo luck=5 → 15%
+	if _endless_mode:
+		return clamp(luck * 0.005, 0.0, 0.5)
+	return luck * 0.03
 
 func get_ranged_damage_mult() -> float:
-	return clamp(1.0 + (perception - 5) * 0.10, 0.5, 2.0)
+	var mult: float
+	if _endless_mode:
+		mult = clamp(1.0 + (perception - 1) * 0.025, 1.0, 3.5)
+	else:
+		mult = clamp(1.0 + (perception - 5) * 0.10, 0.5, 2.0)
+	if has_perk("strzelec_wyborowy"):
+		mult *= 1.25
+	return mult
+
+# Multiplier used when a crit lands. Lepsze Krytyki bumps from 2× to 3×.
+func get_crit_mult() -> float:
+	return 3.0 if has_perk("lepsze_krytyki") else 2.0
+
+# Endless only: chance to fully dodge an incoming hit. 0 in story.
+func get_dodge_chance() -> float:
+	if not _endless_mode:
+		return 0.0
+	return clamp((agility - 1) * 0.003, 0.0, 0.25)
 
 func roll_crit() -> bool:
 	return randf() < get_crit_chance()
@@ -307,6 +509,10 @@ func recalculate_stats():
 
 func take_damage(amount: int):
 	if invincible or is_dying:
+		return
+	# Endless: agility-based dodge — full skip of incoming hit.
+	if _endless_mode and randf() < get_dodge_chance():
+		_spawn_dodge_indicator()
 		return
 	var reduction = get_damage_reduction()
 	var final_amount = max(1, int(round(amount * (1.0 - reduction))))
@@ -363,6 +569,23 @@ func _spawn_damage_number(amount: int):
 	tween.tween_property(label, "position:y", label.position.y - 55, 0.7)
 	tween.tween_property(label, "modulate:a", 0.0, 0.7).set_delay(0.2)
 	tween.chain().tween_callback(label.queue_free)
+
+func _spawn_dodge_indicator() -> void:
+	# Endless-only feedback when an agility-dodge skips a hit.
+	var label = Label.new()
+	label.text = "UNIK"
+	label.add_theme_font_size_override("font_size", 24)
+	label.add_theme_color_override("font_color", Color(0.4, 1.0, 0.95))
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	label.add_theme_constant_override("outline_size", 5)
+	label.z_index = 10
+	label.position = global_position + Vector2(-24, -80)
+	get_tree().root.get_child(0).add_child(label)
+	var tw = label.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(label, "position:y", label.position.y - 50, 0.6)
+	tw.tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.15)
+	tw.chain().tween_callback(label.queue_free)
 
 func _die():
 	if is_dying:
