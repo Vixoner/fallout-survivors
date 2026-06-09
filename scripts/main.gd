@@ -1,7 +1,8 @@
 extends Node2D
 
-const CAP_SCENE = preload("res://scenes/cap.tscn")
-const SHOP_SCRIPT = preload("res://scripts/shop.gd")
+const CAP_SCENE       = preload("res://scenes/cap.tscn")
+const SHOP_SCRIPT     = preload("res://scripts/shop.gd")
+const TUTORIAL_SCRIPT = preload("res://scripts/tutorial.gd")
 const PAUSE_MENU_SCRIPT = preload("res://scripts/pause_menu.gd")
 const VICTORY_SCRIPT = preload("res://scripts/victory_screen.gd")
 const GAME_OVER_SCRIPT = preload("res://scripts/game_over_screen.gd")
@@ -74,7 +75,12 @@ func _ready():
 	if player:
 		player.game_over.connect(_on_player_game_over)
 	_start_music()
-	start_wave(0)
+	if GameState.tutorial_mode:
+		var tutorial := TUTORIAL_SCRIPT.new()
+		tutorial.setup(self, player)
+		add_child(tutorial)
+	else:
+		start_wave(0)
 
 func _start_music() -> void:
 	# Try .ogg first (best for looping), .mp3 as fallback. Bus = "Music" so
@@ -242,6 +248,7 @@ func show_shop():
 
 func show_victory_screen():
 	_victory_shown = true
+	GameState.save_record(GameState.selected_class.get("id", ""), _run_time)
 	var screen = VICTORY_SCRIPT.new()
 	screen.zombies_killed = _zombies_killed
 	screen.elapsed_time = _run_time

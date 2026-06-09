@@ -559,14 +559,14 @@ _data = {
 [sub_resource type="CircleShape2D" id="CircleShape2D_range"]
 radius = 50.0
 
-[node name="Enemy" type="CharacterBody2D" unique_id=200000001 groups=["enemies"]]
+[node name="Enemy2" type="CharacterBody2D" unique_id=200000001 groups=["enemies"]]
 scale = Vector2(3.5, 3.5)
 collision_mask = 2
 script = ExtResource("1_script")
 ranged_range = null
 ranged_cooldown = null
 summon_interval = null
-max_health = 1000
+max_health = 15000
 move_speed = 150.0
 attack_damage = 15
 attack_cooldown = 2.0

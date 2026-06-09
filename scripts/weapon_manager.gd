@@ -16,7 +16,7 @@ func _ready():
 
 func equip(weapon: WeaponData) -> void:
 	current_weapon = weapon
-	_cooldown = 0.0
+	_cooldown = weapon.fire_rate if weapon != null else 0.0
 
 func tick(delta: float) -> void:
 	if _cooldown > 0.0:

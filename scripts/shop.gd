@@ -65,6 +65,7 @@ var _reroll_cost: int = 5
 var _cards_hbox: HBoxContainer = null
 var _caps_label: Label = null
 var _reroll_cost_lbl: Label = null
+var _tooltip: Control = null
 
 # Endless mode adds an extra card row for weapon upgrades. Set by endless.gd
 # before adding the shop as a child.
@@ -151,6 +152,8 @@ func _build_ui():
 	_caps_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root_vbox.add_child(_caps_label)
 
+	_tooltip = GameState.build_stat_tooltip(self)
+
 	_cards_hbox = HBoxContainer.new()
 	_cards_hbox.add_theme_constant_override("separation", 16)
 	_cards_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -220,43 +223,32 @@ func _build_stats_panel() -> Control:
 
 	vbox.add_child(_hsep())
 
-	var stats = [
-		["SIŁA",           "strength",     "Wpływa na obrażenia w walce wręcz."],
-		["PERCEPCJA",      "perception",   "Wpływa na obrażenia ataku broni palnej."],
-		["WYTRZYMAŁOŚĆ",   "endurance",    "Wpływa na maksymalną liczbę punktów zdrowia i odporność na obrażenia."],
-		["CHARYZMA",       "charisma",     "Wpływa na ceny w sklepie."],
-		["INTELIGENCJA",   "intelligence", "Wpływa na odległość przyciągania kapsli które wypadają z przeciwników."],
-		["ZWINNOŚĆ",       "agility",      "Wpływa na prędkość poruszania się."],
-		["SZCZĘŚCIE",      "luck",         "Wpływa na szansę obrażeń krytycznych."],
-	]
+	# Tooltip z wyjaśnieniem statystyk (tworzony wcześniej w _build_ui)
+	var tooltip = _tooltip
 
-	# Tooltip z wyjaśnieniem statystyk
-	var tooltip = _build_tooltip()
-	add_child(tooltip)
-
-	for entry in stats:
+	for stat_key in GameState.STAT_ORDER:
 		var row = PanelContainer.new()
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var row_style_normal = _flat(C_CARD, Color(0,0,0,0), 0, 6)
 		var row_style_hover  = _flat(Color(0.06, 0.20, 0.06), C_BORDER, 1, 6)
 		row.add_theme_stylebox_override("panel", row_style_normal)
-		row.mouse_entered.connect(_on_stat_hover.bind(entry[0], entry[2], tooltip, row, row_style_hover))
-		row.mouse_exited.connect(_on_stat_exit.bind(tooltip, row, row_style_normal))
+		row.mouse_entered.connect(GameState.show_stat_tooltip.bind(stat_key, tooltip, row, row_style_hover))
+		row.mouse_exited.connect(GameState.hide_stat_tooltip.bind(tooltip, row, row_style_normal))
 		vbox.add_child(row)
 
 		var inner = HBoxContainer.new()
 		inner.add_theme_constant_override("separation", 8)
 		row.add_child(inner)
 
-		var name_lbl = _label(entry[0], 14, C_MID)
+		var name_lbl = _label(GameState.STAT_INFO[stat_key]["label"], 14, C_MID)
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		inner.add_child(name_lbl)
 
-		var val = _player.get(entry[1]) if _player else 0
+		var val = _player.get(stat_key) if _player else 0
 		var val_lbl = _label(str(val), 16, C_BRIGHT)
 		val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		inner.add_child(val_lbl)
-		_stat_labels[entry[1]] = val_lbl
+		_stat_labels[stat_key] = val_lbl
 
 		vbox.add_child(_hsep())
 
@@ -405,11 +397,6 @@ func _make_card(item: Dictionary) -> Control:
 	vbox.add_child(desc_lbl)
 
 	# Stat bonuses
-	const STAT_NAMES = {
-		"strength": "SIŁA", "perception": "PERCEPCJA", "endurance": "WYTRZYMAŁOŚĆ",
-		"charisma": "CHARYZMA", "intelligence": "INTELIGENCJA",
-		"agility": "ZWINNOŚĆ", "luck": "SZCZĘŚCIE",
-	}
 	if item.has("heal"):
 		var pct = int(item["heal"] * 100)
 		var s = _label("+%d%%  HP" % pct, 15, Color(0.3, 1.0, 0.4))
@@ -426,10 +413,20 @@ func _make_card(item: Dictionary) -> Control:
 			var val: int = entry[1]
 			var prefix = "+" if val > 0 else ""
 			var color = C_BRIGHT if val > 0 else Color(1.0, 0.35, 0.35)
-			var stat_name = STAT_NAMES.get(stat, stat.to_upper())
+			var stat_name: String = GameState.STAT_INFO.get(stat, {}).get("label", stat.to_upper())
 			var s = _label("%s%d  %s" % [prefix, val, stat_name], 15, color)
 			s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			vbox.add_child(s)
+			if _tooltip != null and GameState.STAT_INFO.has(stat):
+				var row := PanelContainer.new()
+				var row_normal := _flat(C_CARD, Color(0, 0, 0, 0), 0, 2)
+				var row_hover := _flat(Color(0.06, 0.20, 0.06), C_BORDER, 1, 2)
+				row.add_theme_stylebox_override("panel", row_normal)
+				row.mouse_entered.connect(GameState.show_stat_tooltip.bind(stat, _tooltip, row, row_hover))
+				row.mouse_exited.connect(GameState.hide_stat_tooltip.bind(_tooltip, row, row_normal))
+				row.add_child(s)
+				vbox.add_child(row)
+			else:
+				vbox.add_child(s)
 
 	# Koszt z uwzględnieniem charyzmy
 	var actual_cost = _get_actual_cost(item["cost"])
@@ -504,47 +501,6 @@ func _on_buy(item: Dictionary, btn: Button, cost_lbl: Label, actual_cost: int):
 	btn.disabled = true
 	btn.add_theme_stylebox_override("normal", _flat(C_BOUGHT, C_DIM, 1, 2))
 	btn.add_theme_stylebox_override("hover",  _flat(C_BOUGHT, C_DIM, 1, 2))
-
-func _build_tooltip() -> Control:
-	var panel = PanelContainer.new()
-	panel.visible = false
-	panel.custom_minimum_size = Vector2(150, 0)
-	panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	panel.z_index = 20
-	panel.add_theme_stylebox_override("panel", _flat(C_PANEL, C_BRIGHT, 1, 6))
-
-	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 3)
-	panel.add_child(vbox)
-
-	var title = _label("", 12, C_BRIGHT)
-	vbox.add_child(title)
-	vbox.add_child(_hsep())
-	var desc = _label("", 11, C_MID)
-	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.custom_minimum_size = Vector2(140, 0)
-	desc.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	vbox.add_child(desc)
-
-	# Przechowaj referencje jako metadane na panelu
-	panel.set_meta("title_lbl", title)
-	panel.set_meta("desc_lbl", desc)
-
-	return panel
-
-func _on_stat_hover(stat_name: String, desc: String, tooltip: Control, row: Control, hover_style: StyleBoxFlat):
-	row.add_theme_stylebox_override("panel", hover_style)
-	tooltip.get_meta("title_lbl").text = stat_name
-	tooltip.get_meta("desc_lbl").text = desc
-	tooltip.reset_size()
-	tooltip.visible = true
-	var row_rect = row.get_global_rect()
-	tooltip.set_position(Vector2(row_rect.end.x + 20, row_rect.position.y))
-
-func _on_stat_exit(tooltip: Control, row: Control, normal_style: StyleBoxFlat):
-	row.add_theme_stylebox_override("panel", normal_style)
-	tooltip.visible = false
 
 func _on_continue():
 	if _player:

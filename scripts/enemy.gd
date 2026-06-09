@@ -134,7 +134,7 @@ func spawn_damage_number(amount: int, is_crit: bool = false):
 	label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	label.add_theme_constant_override("outline_size", 5 if is_crit else 4)
 	label.z_index = 10
-	label.position = global_position + Vector2(-16, -60)
+	label.position = global_position + Vector2(-16 + randf_range(-10, 10), -60 + randf_range(-10, 10))
 	get_tree().root.get_child(0).add_child(label)
 
 	var tween = label.create_tween()

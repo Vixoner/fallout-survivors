@@ -1,7 +1,8 @@
 extends Control
 
-const GAME_SCENE      = "res://scenes/main.tscn"
-const MAIN_MENU_SCENE = "res://scenes/main_menu.tscn"
+const GAME_SCENE        = "res://scenes/main.tscn"
+const MAIN_MENU_SCENE   = "res://scenes/main_menu.tscn"
+const MODE_SELECT_SCENE = "res://scenes/mode_select.tscn"
 
 const C_PANEL   = Color(0.02, 0.08, 0.02)
 const C_CARD    = Color(0.03, 0.11, 0.03)
@@ -49,16 +50,6 @@ const CLASSES = [
 	},
 ]
 
-const STAT_LABELS = {
-	"strength":     "SIŁA",
-	"perception":   "PERCEPCJA",
-	"endurance":    "WYTRZYMAŁOŚĆ",
-	"charisma":     "CHARYZMA",
-	"intelligence": "INTELIGENCJA",
-	"agility":      "ZWINNOŚĆ",
-	"luck":         "SZCZĘŚCIE",
-}
-const STAT_ORDER = ["strength","perception","endurance","charisma","intelligence","agility","luck"]
 
 var _current_index: int = 0
 var _frame_timer: float = 0.0
@@ -69,6 +60,9 @@ var _preview_rect: TextureRect = null
 var _name_label: Label = null
 var _desc_label: Label = null
 var _stat_value_labels: Dictionary = {}
+var _grenade_label: Label = null
+var _record_label: Label = null
+var _tutorial_check: CheckBox = null
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -96,13 +90,24 @@ func _process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ESCAPE:
-			get_tree().change_scene_to_file(MAIN_MENU_SCENE)
+			get_tree().change_scene_to_file(MODE_SELECT_SCENE)
 
 func _build_ui() -> void:
-	var bg := ColorRect.new()
-	bg.color = Color(0.00, 0.02, 0.00, 1.0)
+	var bg := TextureRect.new()
+	bg.texture = preload("res://assets/sprites/background.png")
+	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bg_mat := ShaderMaterial.new()
+	bg_mat.shader = preload("res://assets/shaders/bg_pan.gdshader")
+	bg.material = bg_mat
 	add_child(bg)
+
+	var overlay := ColorRect.new()
+	overlay.color = Color(0.00, 0.02, 0.00, 0.68)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(overlay)
 
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -167,6 +172,11 @@ func _build_ui() -> void:
 	_desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	card_vbox.add_child(_desc_label)
 
+	# Rekord
+	_record_label = _label("", 15, Color(0.85, 0.75, 0.3))
+	_record_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	card_vbox.add_child(_record_label)
+
 	# Prawa kolumna: panel statystyk
 	var stats_panel := PanelContainer.new()
 	stats_panel.add_theme_stylebox_override("panel", _flat(C_CARD, C_BORDER, 1, 4))
@@ -190,21 +200,57 @@ func _build_ui() -> void:
 	stats_vbox.add_child(stats_title)
 	stats_vbox.add_child(_hsep())
 
+	var tooltip := GameState.build_stat_tooltip(self)
+
 	_stat_value_labels.clear()
-	for stat_key in STAT_ORDER:
-		var row := HBoxContainer.new()
-		var name_lbl := _label(STAT_LABELS[stat_key], 15, C_MID)
+	for stat_key in GameState.STAT_ORDER:
+		var row := PanelContainer.new()
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var row_style_normal := _flat(C_CARD, Color(0, 0, 0, 0), 0, 5)
+		var row_style_hover := _flat(Color(0.06, 0.20, 0.06), C_BORDER, 1, 5)
+		row.add_theme_stylebox_override("panel", row_style_normal)
+		row.mouse_entered.connect(GameState.show_stat_tooltip.bind(stat_key, tooltip, row, row_style_hover))
+		row.mouse_exited.connect(GameState.hide_stat_tooltip.bind(tooltip, row, row_style_normal))
+		stats_vbox.add_child(row)
+
+		var inner := HBoxContainer.new()
+		inner.add_theme_constant_override("separation", 8)
+		row.add_child(inner)
+
+		var name_lbl := _label(GameState.STAT_INFO[stat_key]["label"], 15, C_MID)
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(name_lbl)
+		inner.add_child(name_lbl)
 		var val_lbl := _label("5", 17, C_BRIGHT)
 		val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		val_lbl.custom_minimum_size = Vector2(28, 0)
-		row.add_child(val_lbl)
-		stats_vbox.add_child(row)
+		inner.add_child(val_lbl)
 		_stat_value_labels[stat_key] = val_lbl
+
+	stats_vbox.add_child(_hsep())
+	var grenade_row := HBoxContainer.new()
+	var grenade_name_lbl := _label("GRANATY STARTOWE", 15, C_MID)
+	grenade_name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grenade_row.add_child(grenade_name_lbl)
+	_grenade_label = _label("0", 17, Color(1.0, 0.6, 0.3))
+	_grenade_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_grenade_label.custom_minimum_size = Vector2(28, 0)
+	grenade_row.add_child(_grenade_label)
+	stats_vbox.add_child(grenade_row)
 
 	# ── Dolne przyciski ───────────────────────────────────────────────
 	vbox.add_child(_hsep())
+
+	var tut_row := HBoxContainer.new()
+	tut_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_child(tut_row)
+
+	_tutorial_check = CheckBox.new()
+	_tutorial_check.text = "  Zacznij z samouczkiem"
+	_tutorial_check.button_pressed = not GameState.is_tutorial_completed()
+	_tutorial_check.add_theme_font_size_override("font_size", 15)
+	_tutorial_check.add_theme_color_override("font_color", C_MID)
+	_tutorial_check.add_theme_color_override("font_hover_color", C_BRIGHT)
+	tut_row.add_child(_tutorial_check)
 
 	var btn_row := HBoxContainer.new()
 	btn_row.add_theme_constant_override("separation", 16)
@@ -212,7 +258,7 @@ func _build_ui() -> void:
 
 	var back_btn := _button("[ WRÓĆ ]", 20, C_BTN, C_BTN_HOV)
 	back_btn.custom_minimum_size = Vector2(220, 56)
-	back_btn.pressed.connect(func(): get_tree().change_scene_to_file(MAIN_MENU_SCENE))
+	back_btn.pressed.connect(func(): get_tree().change_scene_to_file(MODE_SELECT_SCENE))
 	btn_row.add_child(back_btn)
 
 	var start_btn := _button("[ ZACZNIJ PODEJŚCIE ]", 22, C_BTN, C_BTN_HOV)
@@ -238,6 +284,10 @@ func _update_display() -> void:
 	_desc_label.text = cls["description"]
 	for stat_key in _stat_value_labels:
 		_stat_value_labels[stat_key].text = str(cls["stats"].get(stat_key, 5))
+	var frag_count: int = cls.get("starting_grenades", {}).get("frag", 0)
+	_grenade_label.text = str(frag_count)
+	var record: float = GameState.get_record(cls["id"])
+	_record_label.text = "REKORD: " + _format_time(record) if record < INF else "REKORD: --:--"
 
 func _on_prev() -> void:
 	_current_index = (_current_index - 1 + CLASSES.size()) % CLASSES.size()
@@ -249,9 +299,15 @@ func _on_next() -> void:
 
 func _on_start() -> void:
 	GameState.selected_class = CLASSES[_current_index]
+	GameState.tutorial_mode  = _tutorial_check.button_pressed
+	GameState.endless_mode   = false
 	get_tree().change_scene_to_file(GAME_SCENE)
 
 # ── Pomocnicze ────────────────────────────────────────────────────────────────
+
+func _format_time(seconds: float) -> String:
+	var total: int = int(seconds)
+	return "%02d:%02d" % [int(total / 60.0), total % 60]
 
 func _nav_button(text: String) -> Button:
 	var btn := Button.new()

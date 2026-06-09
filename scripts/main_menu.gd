@@ -11,13 +11,25 @@ const MODE_SELECT_SCENE = "res://scenes/mode_select.tscn"
 var _settings_panel = null
 
 func _ready():
+	get_tree().paused = false
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	SettingsPanel.load_and_apply()
 	_build_ui()
 
 func _build_ui():
+	var bg := TextureRect.new()
+	bg.texture = preload("res://assets/sprites/background.png")
+	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bg_mat := ShaderMaterial.new()
+	bg_mat.shader = preload("res://assets/shaders/bg_pan.gdshader")
+	bg.material = bg_mat
+	add_child(bg)
+
 	var overlay := ColorRect.new()
-	overlay.color = Color(0.00, 0.02, 0.00, 1.0)
+	overlay.color = Color(0.00, 0.02, 0.00, 0.68)
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
 
@@ -109,6 +121,37 @@ func _hsep() -> HSeparator:
 	ss.content_margin_top = 1
 	sep.add_theme_stylebox_override("separator", ss)
 	return sep
+
+func _make_bg_shader() -> Shader:
+	var sh := Shader.new()
+	sh.code = """
+shader_type canvas_item;
+uniform float blur_amount = 3.5;
+uniform float zoom = 1.14;
+uniform float pan_speed = 0.03;
+
+void fragment() {
+	// Zoom in so there's room to pan without showing edges
+	vec2 uv = (UV - 0.5) / zoom + 0.5;
+	// Slow sinusoidal drift
+	uv.x += sin(TIME * pan_speed) * 0.045;
+	uv.y += sin(TIME * pan_speed * 0.65 + 1.8) * 0.03;
+
+	// 5x5 Gaussian blur
+	vec2 px = blur_amount / vec2(textureSize(TEXTURE, 0));
+	vec4 col = vec4(0.0);
+	float total = 0.0;
+	for (int x = -2; x <= 2; x++) {
+		for (int y = -2; y <= 2; y++) {
+			float w = exp(-float(x * x + y * y) * 0.4);
+			col += texture(TEXTURE, uv + vec2(float(x), float(y)) * px) * w;
+			total += w;
+		}
+	}
+	COLOR = col / total;
+}
+"""
+	return sh
 
 func _make_scanline_shader() -> Shader:
 	var sh := Shader.new()

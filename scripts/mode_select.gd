@@ -26,8 +26,19 @@ func _input(event: InputEvent) -> void:
 			get_tree().change_scene_to_file(MAIN_MENU_SCENE)
 
 func _build_ui():
+	var bg := TextureRect.new()
+	bg.texture = preload("res://assets/sprites/background.png")
+	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bg_mat := ShaderMaterial.new()
+	bg_mat.shader = preload("res://assets/shaders/bg_pan.gdshader")
+	bg.material = bg_mat
+	add_child(bg)
+
 	var overlay := ColorRect.new()
-	overlay.color = Color(0.00, 0.02, 0.00, 1.0)
+	overlay.color = Color(0.00, 0.02, 0.00, 0.68)
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
 
@@ -70,16 +81,6 @@ func _build_ui():
 	endless_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(endless_desc)
 
-	# Tutorial — mock.
-	var tutorial_btn := _button("[ SAMOUCZEK ]", 22, C_BTN, C_BTN_HOV)
-	tutorial_btn.custom_minimum_size = Vector2(0, 54)
-	tutorial_btn.pressed.connect(_on_tutorial.bind(tutorial_btn))
-	vbox.add_child(tutorial_btn)
-
-	var tutorial_desc := _label("Naucz się podstaw rozgrywki.", 13, C_DIM)
-	tutorial_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(tutorial_desc)
-
 	vbox.add_child(_hsep())
 
 	var back_btn := _button("[ WRÓĆ ]", 20, C_BTN, C_BTN_HOV)
@@ -105,24 +106,8 @@ func _on_endless(_btn: Button) -> void:
 	GameState.endless_mode = true
 	get_tree().change_scene_to_file(WEAPON_SELECT_SCENE)
 
-func _on_tutorial(btn: Button) -> void:
-	_flash_coming_soon(btn)
-
 func _on_back() -> void:
 	get_tree().change_scene_to_file(MAIN_MENU_SCENE)
-
-func _flash_coming_soon(btn: Button) -> void:
-	# Brief "coming soon" feedback on click without leaving the menu.
-	var original_text := btn.text
-	btn.text = "[ WKRÓTCE ]"
-	btn.disabled = true
-	var tween := create_tween()
-	tween.tween_interval(0.9)
-	tween.tween_callback(func() -> void:
-		if is_instance_valid(btn):
-			btn.text = original_text
-			btn.disabled = false
-	)
 
 func _label(text: String, font_size: int, color: Color) -> Label:
 	var lbl := Label.new()

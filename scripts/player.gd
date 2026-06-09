@@ -19,6 +19,9 @@ const BASE_GRENADE_CAP = 4
 var caps: int = 0
 var movement_blocked: bool = false
 var is_dying: bool = false
+var melee_locked: bool   = false
+var ranged_locked: bool  = false
+var grenade_locked: bool = false
 
 var max_hp: int = 20
 var current_hp: int = 20
@@ -260,7 +263,7 @@ func _input(event):
 		elif event.keycode == KEY_4:
 			_equip_weapon_by_id("shotgun")
 		elif event.keycode == KEY_G:
-			if not movement_blocked and not is_dying:
+			if not movement_blocked and not is_dying and not grenade_locked:
 				_throw_grenade("frag")
 
 func _throw_grenade(grenade_type: String) -> void:
@@ -291,6 +294,8 @@ func add_grenade(grenade_type: String, amount: int) -> int:
 	return added
 
 func _update_grenades_ui() -> void:
+	if not is_inside_tree():
+		return
 	var label = get_tree().get_first_node_in_group("grenades_label")
 	if label:
 		label.text = "Granaty: %d / %d" % [int(grenades.get("frag", 0)), get_grenade_cap()]
@@ -347,6 +352,8 @@ func _physics_process(delta):
 	
 func handle_knife_autoattack(delta):
 	knife_timer += delta
+	if melee_locked:
+		return
 	if knife_timer >= knife_cooldown:
 		var target = get_nearest_enemy()
 		if target:
@@ -366,6 +373,9 @@ func handle_knife_autoattack(delta):
 
 func handle_weapon_fire(delta: float):
 	if not is_instance_valid(weapon_manager):
+		return
+	if ranged_locked:
+		weapon_manager.tick(delta)
 		return
 	weapon_manager.tick(delta)
 	if not weapon_manager.can_fire():
@@ -561,7 +571,7 @@ func _spawn_damage_number(amount: int):
 	label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	label.add_theme_constant_override("outline_size", 5)
 	label.z_index = 10
-	label.position = global_position + Vector2(-20, -80)
+	label.position = global_position + Vector2(-20 + randf_range(-10, 10), -80 + randf_range(-10, 10))
 	get_tree().root.get_child(0).add_child(label)
 
 	var tween = label.create_tween()
@@ -607,7 +617,7 @@ func _die():
 
 	var canvas = CanvasLayer.new()
 	canvas.layer = 100
-	get_tree().root.get_child(0).add_child(canvas)
+	get_tree().current_scene.add_child(canvas)
 	var overlay = ColorRect.new()
 	overlay.color = Color(0, 0, 0, 0)
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -620,6 +630,8 @@ func _die():
 
 func add_caps(amount: int):
 	caps += amount
+	if not is_inside_tree():
+		return
 	var label = get_tree().get_first_node_in_group("caps_label")
 	if label:
 		label.text = "Kapsle: " + str(caps)
