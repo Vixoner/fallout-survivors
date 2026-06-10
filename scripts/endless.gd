@@ -147,7 +147,7 @@ func _input(event): # tylko do testów, trzeba usunac ltaer
 					enemy.die()
 		elif event.keycode == KEY_BACKSPACE: # debug: level 20
 			if player and player.has_method("add_xp"):
-				player.add_xp(10000)
+				player.add_xp(11600)
 
 func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("ui_cancel"):
@@ -427,12 +427,18 @@ func _on_boss_died() -> void:
 func _show_shop() -> void:
 	_in_shop = true
 	_showing_modal = true
+	
+	get_tree().paused = true
+	
 	var shop = SHOP_SCRIPT.new()
 	shop.setup(player)
 	if "endless_mode" in shop:
 		shop.endless_mode = true
 	add_child(shop)
 	await shop.shop_closed
+	
+	get_tree().paused = false
+	
 	_in_shop = false
 	_showing_modal = false
 

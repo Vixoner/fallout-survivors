@@ -1,6 +1,6 @@
-[gd_scene format=4 uid="uid://d1apjpea5mg1j"]
+[gd_scene format=4 uid="uid://cifq775kw2i5u"]
 
-[ext_resource type="Script" uid="uid://car5s1il0ucy1" path="res://scripts/main.gd" id="1_sugp2"]
+[ext_resource type="Script" uid="uid://ccknewsvalodk" path="res://scripts/map2.gd" id="1_vf7gc"]
 [ext_resource type="PackedScene" uid="uid://d3msx4t4u7728" path="res://scenes/player.tscn" id="2_0wfyh"]
 [ext_resource type="Texture2D" uid="uid://die680jh4nr8v" path="res://waste.png" id="2_jyhfs"]
 [ext_resource type="Texture2D" uid="uid://4hnj7cj880j3" path="res://assets/sprites/Tiles/Background_Bleak-Yellow_TileSet.png" id="3_tbgi4"]
@@ -708,7 +708,7 @@ size = Vector2(949, 437)
 load_path = "res://.godot/imported/HP.png-47e74dd23b7c59ba7abd9414cc19a441.ctex"
 
 [node name="Main" type="Node2D" unique_id=711233798]
-script = ExtResource("1_sugp2")
+script = ExtResource("1_vf7gc")
 map_size_scale = 1.5
 
 [node name="Floor" type="Sprite2D" parent="." unique_id=979870751]

@@ -232,3 +232,5 @@ func _play_sfx_2d(stream: AudioStream) -> void:
 	p.global_position = global_position
 	p.finished.connect(p.queue_free)
 	get_tree().current_scene.add_child(p)
+	
+	# TYMCZASOWE -------------------------------------------------------------
