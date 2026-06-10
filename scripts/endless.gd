@@ -24,6 +24,7 @@ const ENEMY_SCENES = {
 	"zombie_small": preload("res://scenes/enemy.tscn"),
 	"zombie_big":   preload("res://scenes/enemy_big.tscn"),
 	"floater":      preload("res://scenes/floater.tscn"),
+	"handy":        preload("res://scenes/handy.tscn"),
 	"zombie_boss":  preload("res://scenes/enemy_boss.tscn"),
 	"robot_boss":   preload("res://scenes/robot_boss.tscn"),
 }
@@ -32,14 +33,25 @@ const ENEMY_SCENES = {
 # Add new bosses to the end of this list to extend rotation.
 const BOSS_POOL := ["zombie_boss", "robot_boss"]
 
-# Spawn tiers — picked by "whichever further" of player level OR elapsed time.
-# Each tier carries a weighted enemy pool.
-const TIERS = [
-	{"level": 1,  "time": 0.0,   "pool": {"rat": 1.0}},
-	{"level": 3,  "time": 90.0,  "pool": {"rat": 0.60, "zombie_small": 0.40}},
-	{"level": 6,  "time": 240.0, "pool": {"rat": 0.30, "zombie_small": 0.50, "floater": 0.20}},
-	{"level": 10, "time": 420.0, "pool": {"rat": 0.15, "zombie_small": 0.35, "zombie_big": 0.20, "floater": 0.30}},
-	{"level": 15, "time": 600.0, "pool": {"rat": 0.05, "zombie_small": 0.25, "zombie_big": 0.25, "floater": 0.45}},
+# Era-based spawn pools. Each entry in ERAS is a list of tiers; tiers within
+# an era unlock by player level / time RELATIVE to when that era started.
+# Era advances on each boss kill (capped at ERAS.size()).
+#   Era 1 — pre-zombie-boss   (rats / zombies / floater)
+#   Era 2 — post-zombie-boss   (handy + future ranged robot)
+#   Era 3+ — TODO when raider enemies exist
+const ERAS = [
+	# Era 1
+	[
+		{"level": 1,  "time": 0.0,   "pool": {"rat": 1.0}},
+		{"level": 3,  "time": 90.0,  "pool": {"rat": 0.60, "zombie_small": 0.40}},
+		{"level": 5,  "time": 200.0, "pool": {"rat": 0.30, "zombie_small": 0.50, "floater": 0.20}},
+		{"level": 8,  "time": 360.0, "pool": {"rat": 0.15, "zombie_small": 0.35, "zombie_big": 0.20, "floater": 0.30}},
+	],
+	# Era 2 — handy filler robot. The ranged robot enemy will be added here
+	# once authored; floater stays in era 1.
+	[
+		{"level": 1, "time": 0.0, "pool": {"handy": 1.0}},
+	],
 ]
 
 # XP awards per enemy type (champion ×2; boss applied below)
@@ -47,10 +59,11 @@ const XP_PER_ENEMY = {
 	"rat": 8,
 	"zombie_small": 12,
 	"floater": 20,
+	"handy": 22,
 	"zombie_big": 25,
 	"sentry_drone": 5,
-	"zombie_boss": 200,
-	"robot_boss": 300,
+	"zombie_boss": 300,
+	"robot_boss": 500,
 }
 
 const PSYCHOPAT_BONUS := 0.10  # +10% XP from humanoid kills
@@ -68,6 +81,13 @@ var enemies_alive: int = 0
 var _run_time: float = 0.0
 var _spawn_timer: float = 0.0
 var _kills: int = 0
+
+# Era progression — advances each time a boss is killed (capped at ERAS.size()).
+# Era-relative level/time tracked so each era's tiers ramp from the moment it starts.
+var _era: int = 1
+var _era_start_level: int = 1
+var _era_start_time: float = 0.0
+var _bosses_defeated: int = 0
 
 # Boss state
 var _boss_phase: bool = false       # true between "level hits multiple of 10" and "boss dead"
@@ -125,7 +145,7 @@ func _input(event): # tylko do testów, trzeba usunac ltaer
 					enemy.die()
 		elif event.keycode == KEY_BACKSPACE: # debug: level 20
 			if player and player.has_method("add_xp"):
-				player.add_xp(11500)
+				player.add_xp(10000)
 
 func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("ui_cancel"):
@@ -168,10 +188,16 @@ func _spawn_cooldown() -> float:
 	return max(0.35, 1.5 - level * 0.025)
 
 func _pick_tier() -> Dictionary:
-	var level: int = int(player.level) if player else 1
-	var t: Dictionary = TIERS[0]
-	for tier in TIERS:
-		if level >= int(tier["level"]) or _run_time >= float(tier["time"]):
+	var era_idx: int = clamp(_era - 1, 0, ERAS.size() - 1)
+	var era_tiers: Array = ERAS[era_idx]
+	# Level / time relative to era start, so each era ramps from "fresh".
+	var level_in_era: int = 1
+	if player:
+		level_in_era = max(1, int(player.level) - _era_start_level + 1)
+	var time_in_era: float = max(0.0, _run_time - _era_start_time)
+	var t: Dictionary = era_tiers[0]
+	for tier in era_tiers:
+		if level_in_era >= int(tier["level"]) or time_in_era >= float(tier["time"]):
 			t = tier
 	return t
 
@@ -380,6 +406,13 @@ func _on_boss_died() -> void:
 	if player:
 		player.current_hp = player.max_hp
 		player._update_hp_bar()
+	# Advance era — spawn pool switches to the next era starting now.
+	_bosses_defeated += 1
+	var new_era: int = min(_bosses_defeated + 1, ERAS.size())
+	if new_era != _era:
+		_era = new_era
+		_era_start_level = int(player.level) if player else 1
+		_era_start_time = _run_time
 	# Wait for any in-progress level-up / perk panel from the boss-kill XP
 	# before stacking the shop on top.
 	while _showing_modal:

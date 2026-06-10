@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://m804g1mit4dq"]
+
+[ext_resource type="Script" uid="uid://dv75qxd33a3i0" path="res://scripts/enemy.gd" id="1_handy_scr"]
+[ext_resource type="Texture2D" uid="uid://b6pfne37lrbx3" path="res://assets/sprites/Enemies/handy_2.0.png" id="2_handy_tex"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_handy"]
+radius = 36.0
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_handy"]
+
+[node name="Handy" type="CharacterBody2D" unique_id=18398011 groups=["enemies"]]
+scale = Vector2(2, 2)
+collision_mask = 2
+script = ExtResource("1_handy_scr")
+max_health = 200
+move_speed = 240.0
+attack_damage = 5
+attack_cooldown = 1.1
+contact_distance = 95.0
+side_only_animations = true
+
+[node name="BodySprite" type="Sprite2D" parent="." unique_id=721018752]
+scale = Vector2(0.1, 0.1)
+texture = ExtResource("2_handy_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1764603291]
+shape = SubResource("CircleShape2D_handy")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1385905147]
+libraries/ = SubResource("AnimationLibrary_handy")

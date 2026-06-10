@@ -7,7 +7,7 @@ var _origin: Vector2 = Vector2.ZERO
 var _direction: Vector2 = Vector2.RIGHT
 var _length: float = 700.0
 var _damage: int = 10
-var _width: float = 28.0
+var _width: float = 40.0
 var _is_crit: bool = false
 
 const FADE_TIME := 0.14
