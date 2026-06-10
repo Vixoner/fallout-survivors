@@ -11,7 +11,7 @@
 [ext_resource type="Texture2D" uid="uid://kv3ans3hb6ae" path="res://assets/sprites/Enemies/Zombie_Big/Zombie_Big_Up_First-Attack-Sheet8.png" id="9_uattack"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
-radius = 65.0
+radius = 39.866276
 
 [sub_resource type="Animation" id="Animation_reset"]
 length = 0.001

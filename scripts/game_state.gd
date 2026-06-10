@@ -1,6 +1,7 @@
 extends Node
 
 static var selected_class: Dictionary = {}
+static var selected_map: int = 0
 
 # Endless mode handoff: set by weapon_select / mode_select, read by player and endless.
 static var endless_mode: bool = false
@@ -35,6 +36,18 @@ func get_record(class_id: String) -> float:
 	if cfg.load(_RECORDS_PATH) != OK:
 		return INF
 	return cfg.get_value("records", class_id, INF)
+
+func is_level_completed(level_index: int) -> bool:
+	var cfg := ConfigFile.new()
+	if cfg.load(_RECORDS_PATH) != OK:
+		return false
+	return cfg.get_value("levels", "completed_" + str(level_index), false)
+
+func mark_level_completed(level_index: int) -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(_RECORDS_PATH)
+	cfg.set_value("levels", "completed_" + str(level_index), true)
+	cfg.save(_RECORDS_PATH)
 
 func is_tutorial_completed() -> bool:
 	var cfg := ConfigFile.new()

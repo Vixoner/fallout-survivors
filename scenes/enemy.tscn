@@ -9,11 +9,11 @@
 [ext_resource type="Texture2D" uid="uid://cpei0ab3uss7q" path="res://assets/sprites/Enemies/Zombie_Small/Zombie_Small_Side_First-Attack-Sheet4.png" id="4_ipns3"]
 [ext_resource type="Texture2D" uid="uid://hu73o3ejyjx0" path="res://assets/sprites/Enemies/Zombie_Small/Zombie_Small_Up_Walk-Sheet6.png" id="4_xwavj"]
 [ext_resource type="Texture2D" uid="uid://df037hm85amm2" path="res://assets/sprites/Enemies/Zombie_Small/Zombie_Small_Up_First-Attack-Sheet4.png" id="5_8qclf"]
-[ext_resource type="AudioStream" path="res://assets/audio/enemies/zombie_small_attack.wav" id="6_atksm"]
-[ext_resource type="AudioStream" path="res://assets/audio/enemies/zombie_small_death.wav" id="7_dthsm"]
+[ext_resource type="AudioStream" uid="uid://bew5xpayydpbv" path="res://assets/audio/enemies/zombie_small_attack.wav" id="6_atksm"]
+[ext_resource type="AudioStream" uid="uid://dalngfwcehnsg" path="res://assets/audio/enemies/zombie_small_death.wav" id="7_dthsm"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_5uy6h"]
-radius = 55.9017
+radius = 29.10756
 
 [sub_resource type="Animation" id="Animation_nenq2"]
 length = 0.001

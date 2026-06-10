@@ -25,6 +25,10 @@ var player = null
 var is_dead: bool = false
 var attack_timer: float = 0.0
 var _champion_tween: Tween = null
+var _nav_agent: NavigationAgent2D = null
+var _last_position: Vector2 = Vector2.ZERO
+var _stuck_timer: float = 0.0
+var _stuck_nudge_side: float = 1.0
 
 @onready var sprite: Sprite2D = $BodySprite
 @onready var animation_player = $AnimationPlayer 
@@ -34,6 +38,13 @@ func _ready():
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 	health = max_health
 	player = get_tree().get_first_node_in_group("player")
+	_nav_agent = NavigationAgent2D.new()
+	_nav_agent.path_desired_distance = 40.0
+	_nav_agent.target_desired_distance = 48.0
+	_nav_agent.path_max_distance = 96.0
+	_nav_agent.avoidance_enabled = false
+	add_child(_nav_agent)
+	_last_position = global_position
 
 func _physics_process(delta):
 	if is_dead: 
@@ -57,10 +68,37 @@ func _physics_process(delta):
 
 		# 3. Ruch i animacja biegu (tylko gdy nie atakuje)
 		if not is_currently_attacking():
-			var move = direction * move_speed + get_separation_force()
+			var move_dir: Vector2 = direction
+			if not fleeing and is_instance_valid(_nav_agent):
+				_nav_agent.set_target_position(player.global_position)
+				if not _nav_agent.is_navigation_finished():
+					var next_pos := _nav_agent.get_next_path_position()
+					var nav_dir := global_position.direction_to(next_pos)
+					if nav_dir.length_squared() > 0.01:
+						move_dir = nav_dir
+			var move = move_dir * move_speed + get_separation_force()
 			velocity = move
 			move_and_slide()
-			update_run_animation(direction)
+			# Odpychanie od ściany przez normalną kolizji — natychmiastowe, bez timera
+			for i in get_slide_collision_count():
+				var col := get_slide_collision(i)
+				if col.get_collider() is StaticBody2D:
+					velocity += col.get_normal() * move_speed * 0.9
+					move_and_slide()
+					break
+			# Fallback unstuck: gdy nawet normalna nie pomaga, impuls boczny
+			var dist_moved := global_position.distance_to(_last_position)
+			if dist_moved < move_speed * delta * 0.1 and distance > contact_distance:
+				_stuck_timer += delta
+				if _stuck_timer > 0.2:
+					velocity = move_dir.rotated(PI / 2.0 * _stuck_nudge_side) * move_speed * 1.5
+					move_and_slide()
+					_stuck_nudge_side = -_stuck_nudge_side
+					_stuck_timer = 0.0
+			else:
+				_stuck_timer = 0.0
+			_last_position = global_position
+			update_run_animation(move_dir)
 			
 func is_currently_attacking() -> bool:
 	return animation_player.is_playing() and animation_player.current_animation.contains("attack")
@@ -135,7 +173,7 @@ func spawn_damage_number(amount: int, is_crit: bool = false):
 	label.add_theme_constant_override("outline_size", 5 if is_crit else 4)
 	label.z_index = 10
 	label.position = global_position + Vector2(-16 + randf_range(-10, 10), -60 + randf_range(-10, 10))
-	get_tree().root.get_child(0).add_child(label)
+	get_tree().current_scene.add_child(label)
 
 	var tween = label.create_tween()
 	tween.set_parallel(true)

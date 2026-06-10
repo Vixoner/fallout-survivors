@@ -15,7 +15,7 @@
 [ext_resource type="Texture2D" uid="uid://d0q8af5khswm3" path="res://assets/sprites/Enemies/Zombie_Axe/Zombie_Axe_Up_Second-Attack-Sheet9.png" id="13_u2atk"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
-radius = 48.57668
+radius = 35.748837
 
 [sub_resource type="Animation" id="Animation_reset"]
 length = 0.001
@@ -573,7 +573,6 @@ attack_cooldown = 2.0
 contact_distance = 150.0
 caps_drop_min = 15
 caps_drop_max = 25
-side_only_animations = null
 
 [node name="BodySprite" type="Sprite2D" parent="." unique_id=200000002]
 scale = Vector2(3, 3)

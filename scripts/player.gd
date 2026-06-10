@@ -39,6 +39,9 @@ var last_direction = "down"
 
 var weapon_manager: WeaponManager = null
 
+var _map_half_w: float = GameConstants.MAP_WIDTH / 2.0
+var _map_half_h: float = GameConstants.MAP_HEIGHT / 2.0
+
 const FRAG_GRENADE_SCRIPT := preload("res://scripts/frag_grenade.gd")
 const GRENADE_THROW_COOLDOWN := 0.35
 const MAX_THROW_RANGE := 900.0
@@ -335,8 +338,8 @@ func _physics_process(delta):
 	velocity = direction * get_move_speed()
 	move_and_slide()
 	
-	position.x = clamp(position.x, -GameConstants.MAP_WIDTH / 2.0 + PLAYER_SIZE, GameConstants.MAP_WIDTH / 2.0 - PLAYER_SIZE)
-	position.y = clamp(position.y, -GameConstants.MAP_HEIGHT / 2.0 + PLAYER_SIZE, GameConstants.MAP_HEIGHT / 2.0 - PLAYER_SIZE)
+	position.x = clamp(position.x, -_map_half_w + PLAYER_SIZE, _map_half_w - PLAYER_SIZE)
+	position.y = clamp(position.y, -_map_half_h + PLAYER_SIZE, _map_half_h - PLAYER_SIZE)
 	
 	
 	handle_knife_autoattack(delta)
@@ -509,6 +512,15 @@ func get_dodge_chance() -> float:
 
 func roll_crit() -> bool:
 	return randf() < get_crit_chance()
+
+func set_map_bounds(width: float, height: float) -> void:
+	_map_half_w = width / 2.0
+	_map_half_h = height / 2.0
+	var cam := $Camera2D as Camera2D
+	cam.limit_left   = -int(width)
+	cam.limit_right  =  int(width)
+	cam.limit_top    = -int(height)
+	cam.limit_bottom =  int(height)
 
 func recalculate_stats():
 	var new_max = get_max_hp()

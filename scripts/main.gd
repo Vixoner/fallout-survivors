@@ -10,6 +10,8 @@ const GAME_OVER_SCRIPT = preload("res://scripts/game_over_screen.gd")
 const SPAWN_MIN_DIST = 700.0
 const SPAWN_MAX_DIST = 1100.0
 
+@export var map_size_scale: float = 1.0
+
 # Typy przeciwników
 const ENEMY_SCENES = {
 	"zombie_small": preload("res://scenes/enemy.tscn"),
@@ -71,9 +73,15 @@ var _wave_ending: bool = false
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_setup_navigation()
 	player = get_tree().get_first_node_in_group("player")
 	if player:
 		player.game_over.connect(_on_player_game_over)
+		if map_size_scale != 1.0:
+			player.set_map_bounds(
+				GameConstants.MAP_WIDTH * map_size_scale,
+				GameConstants.MAP_HEIGHT * map_size_scale
+			)
 	_start_music()
 	if GameState.tutorial_mode:
 		var tutorial := TUTORIAL_SCRIPT.new()
@@ -175,8 +183,10 @@ func spawn_single_enemy():
 
 func get_spawn_position() -> Vector2:
 	var margin = 64.0
-	var map_min = Vector2(-GameConstants.MAP_WIDTH / 2.0 + margin, -GameConstants.MAP_HEIGHT / 2.0 + margin)
-	var map_max = Vector2(GameConstants.MAP_WIDTH / 2.0 - margin, GameConstants.MAP_HEIGHT / 2.0 - margin)
+	var map_w := GameConstants.MAP_WIDTH * map_size_scale
+	var map_h := GameConstants.MAP_HEIGHT * map_size_scale
+	var map_min = Vector2(-map_w / 2.0 + margin, -map_h / 2.0 + margin)
+	var map_max = Vector2(map_w / 2.0 - margin, map_h / 2.0 - margin)
 
 	if not player:
 		return Vector2(randf_range(map_min.x, map_max.x), randf_range(map_min.y, map_max.y))
@@ -249,6 +259,7 @@ func show_shop():
 func show_victory_screen():
 	_victory_shown = true
 	GameState.save_record(GameState.selected_class.get("id", ""), _run_time)
+	GameState.mark_level_completed(GameState.selected_map)
 	var screen = VICTORY_SCRIPT.new()
 	screen.zombies_killed = _zombies_killed
 	screen.elapsed_time = _run_time
@@ -265,3 +276,32 @@ func spawn_caps(spawn_pos: Vector2, count: int = 1, value: int = 1):
 		cap.value = value
 		cap.position = spawn_pos + Vector2(randf_range(-30, 30), randf_range(-30, 30))
 		add_child.call_deferred(cap)
+
+func _setup_navigation() -> void:
+	var walls: Node = get_node_or_null("Walls")
+	if walls != null:
+		# Tag Walls so the bake can find it — default mode only scans NavRegion's
+		# own children, groups mode scans any tagged node and its children.
+		walls.add_to_group(&"nav_obstacle")
+
+	var nav_region := NavigationRegion2D.new()
+	nav_region.name = "NavRegion"
+	add_child(nav_region)
+
+	var nav_poly := NavigationPolygon.new()
+	nav_poly.parsed_geometry_type  = NavigationPolygon.PARSED_GEOMETRY_STATIC_COLLIDERS
+	nav_poly.parsed_collision_mask = 2
+	nav_poly.agent_radius          = 60.0
+	nav_poly.source_geometry_mode  = NavigationPolygon.SOURCE_GEOMETRY_GROUPS_WITH_CHILDREN
+	nav_poly.source_geometry_group_name = &"nav_obstacle"
+
+	var half := maxf(GameConstants.MAP_WIDTH, GameConstants.MAP_HEIGHT) * map_size_scale
+	nav_poly.add_outline(PackedVector2Array([
+		Vector2(-half, -half),
+		Vector2( half, -half),
+		Vector2( half,  half),
+		Vector2(-half,  half),
+	]))
+
+	nav_region.navigation_polygon = nav_poly
+	nav_region.bake_navigation_polygon(false)

@@ -3,6 +3,7 @@ extends Control
 const GAME_SCENE        = "res://scenes/main.tscn"
 const MAIN_MENU_SCENE   = "res://scenes/main_menu.tscn"
 const MODE_SELECT_SCENE = "res://scenes/mode_select.tscn"
+const MAP_SELECT_SCENE  = "res://scenes/map_select.tscn"
 
 const C_PANEL   = Color(0.02, 0.08, 0.02)
 const C_CARD    = Color(0.03, 0.11, 0.03)
@@ -301,7 +302,11 @@ func _on_start() -> void:
 	GameState.selected_class = CLASSES[_current_index]
 	GameState.tutorial_mode  = _tutorial_check.button_pressed
 	GameState.endless_mode   = false
-	get_tree().change_scene_to_file(GAME_SCENE)
+	if GameState.tutorial_mode:
+		GameState.selected_map = 0
+		get_tree().change_scene_to_file(GAME_SCENE)
+	else:
+		get_tree().change_scene_to_file(MAP_SELECT_SCENE)
 
 # ── Pomocnicze ────────────────────────────────────────────────────────────────
 
