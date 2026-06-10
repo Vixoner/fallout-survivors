@@ -70,6 +70,7 @@ var _run_time: float = 0.0
 var _victory_shown: bool = false
 var _game_over_shown: bool = false
 var _wave_ending: bool = false
+var _eggs_collected: int = 0
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -82,6 +83,7 @@ func _ready():
 				GameConstants.MAP_WIDTH * map_size_scale,
 				GameConstants.MAP_HEIGHT * map_size_scale
 			)
+	_spawn_easter_eggs()
 	_start_music()
 	if GameState.tutorial_mode:
 		var tutorial := TUTORIAL_SCRIPT.new()
@@ -186,7 +188,7 @@ func get_spawn_position() -> Vector2:
 	var map_w := GameConstants.MAP_WIDTH * map_size_scale
 	var map_h := GameConstants.MAP_HEIGHT * map_size_scale
 	var map_min = Vector2(-map_w / 2.0 + margin, -map_h / 2.0 + margin)
-	var map_max = Vector2(map_w / 2.0 - margin, map_h / 2.0 - margin)
+	var map_max = Vector2( map_w / 2.0 - margin,  map_h / 2.0 - margin)
 
 	if not player:
 		return Vector2(randf_range(map_min.x, map_max.x), randf_range(map_min.y, map_max.y))
@@ -305,3 +307,60 @@ func _setup_navigation() -> void:
 
 	nav_region.navigation_polygon = nav_poly
 	nav_region.bake_navigation_polygon(false)
+
+func _spawn_easter_eggs() -> void:
+	var hw := GameConstants.MAP_WIDTH  * map_size_scale - 180.0
+	var hh := GameConstants.MAP_HEIGHT * map_size_scale - 180.0
+	for corner in [Vector2(-hw, -hh), Vector2(hw, -hh), Vector2(-hw, hh), Vector2(hw, hh)]:
+		_spawn_single_egg(corner)
+
+func _spawn_single_egg(pos: Vector2) -> void:
+	var egg := Area2D.new()
+	egg.position = pos
+	egg.collision_layer = 0
+	egg.collision_mask  = 1
+	egg.process_mode    = Node.PROCESS_MODE_PAUSABLE
+
+	var sprite := Sprite2D.new()
+	sprite.texture = preload("res://assets/sprites/Egg_JE2_BE2.png")
+	sprite.scale = Vector2(0.3, 0.3)
+	sprite.z_index = 4
+	egg.add_child(sprite)
+
+	var shape := CollisionShape2D.new()
+	var circle := CircleShape2D.new()
+	circle.radius = 24.0
+	shape.shape = circle
+	egg.add_child(shape)
+
+	add_child(egg)
+
+	egg.body_entered.connect(func(body: Node) -> void:
+		if body.is_in_group("player") and is_instance_valid(egg):
+			egg.queue_free()
+			_eggs_collected += 1
+			if _eggs_collected >= 4:
+				_on_all_eggs_collected()
+	)
+
+	var tween := egg.create_tween().set_loops()
+	tween.tween_property(sprite, "position:y", -8.0, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(sprite, "position:y",  8.0, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+func _on_all_eggs_collected() -> void:
+	spawn_caps(Vector2.ZERO, 30, 1)
+	var label := Label.new()
+	label.text = "EASTER EGG!  +30 kapsli czeka na środku!"
+	label.add_theme_font_size_override("font_size", 18)
+	label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.1))
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	label.add_theme_constant_override("outline_size", 4)
+	label.z_index = 10
+	var start_pos := (player.global_position if player else Vector2.ZERO) + Vector2(-80, -60)
+	label.position = start_pos
+	add_child(label)
+	var t := label.create_tween()
+	t.set_parallel(true)
+	t.tween_property(label, "position:y", start_pos.y - 50, 2.0)
+	t.tween_property(label, "modulate:a", 0.0, 2.0).set_delay(0.8)
+	t.chain().tween_callback(label.queue_free)
