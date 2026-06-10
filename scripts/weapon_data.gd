@@ -55,12 +55,12 @@ static func make_plasma() -> WeaponData:
 static func make_shotgun() -> WeaponData:
 	var w := WeaponData.new()
 	w.name = "Shotgun"
-	w.damage = 9
+	w.damage = 7
 	w.fire_rate = 1.0
 	w.bullet_speed = 1150.0
 	w.bullet_scene = load("res://scenes/pellet.tscn")
-	w.projectile_count = 12
-	w.spread_angle = 0.55     # ~32° cone
+	w.projectile_count = 10
+	w.spread_angle = 0.90     # ~32° cone 0.55
 	w.spread_random = true    # random scatter within the cone per shot
 	w.fire_sound = load("res://assets/audio/weapons/shotgun_fire.wav")
 	return w

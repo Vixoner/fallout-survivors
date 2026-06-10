@@ -27,6 +27,7 @@ const ENEMY_SCENES = {
 	"handy":        preload("res://scenes/handy.tscn"),
 	"zombie_boss":  preload("res://scenes/enemy_boss.tscn"),
 	"robot_boss":   preload("res://scenes/robot_boss.tscn"),
+	"gutsy":      preload("res://scenes/gutsy.tscn"),
 }
 
 # Boss rotation. Indexed by (boss_count - 1) % len so the list cycles forever.
@@ -51,6 +52,7 @@ const ERAS = [
 	# once authored; floater stays in era 1.
 	[
 		{"level": 1, "time": 0.0, "pool": {"handy": 1.0}},
+		{"level": 3,  "time": 90.0,  "pool": {"handy": 0.60, "gutsy": 0.40}},
 	],
 ]
 

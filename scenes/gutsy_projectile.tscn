@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://cyw032fmgnf0b"]
+
+[ext_resource type="Script" uid="uid://b4s6u860eyvp" path="res://scripts/gutsy_projectile.gd" id="1_b473l"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_dkkns"]
+
+[node name="Gutsy_Projectile" type="Area2D" unique_id=718989919]
+collision_layer = 5
+script = ExtResource("1_b473l")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=984478545]
+shape = SubResource("CircleShape2D_dkkns")

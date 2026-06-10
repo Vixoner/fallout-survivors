@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://bvwptfj83a5qe"]
+
+[ext_resource type="Script" uid="uid://cwjrb4erb4l5u" path="res://scripts/gutsy.gd" id="1_lebb8"]
+[ext_resource type="Texture2D" uid="uid://cql73rl2gniil" path="res://assets/sprites/Enemies/gutsy.png" id="2_5qvdx"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_p5l8k"]
+
+[node name="Gutsy" type="CharacterBody2D" unique_id=114902407 groups=["enemies"]]
+collision_mask = 2
+script = ExtResource("1_lebb8")
+attack_cooldown = 1.0
+
+[node name="BodySprite" type="Sprite2D" parent="." unique_id=2051334662]
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("2_5qvdx")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1586870275]
+position = Vector2(0, 0.99999994)
+scale = Vector2(7, 7)
+shape = SubResource("CircleShape2D_p5l8k")

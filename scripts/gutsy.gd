@@ -1,28 +1,25 @@
 extends CharacterBody2D
 
 # Floater — ranged enemy. Hovers at a preferred distance from the player and
-# fires a 4-direction volley of slow gooey balls on a cooldown. No animations,
+# fires a single slow gooey ball aimed at the player on a cooldown. No animations,
 # no melee attack. Death is a fade-out (no death animation either).
 
 signal died(position: Vector2, caps_count: int)
 
 const HIT_SHADER := preload("res://assets/shaders/hit_flash.gdshader")
-const BALL_SCENE := preload("res://scenes/floater_ball.tscn")
+const BALL_SCENE := preload("res://scenes/gutsy_projectile.tscn")
 const SEPARATION_RADIUS := 100.0
 const SEPARATION_STRENGTH := 140.0
 
-# 4 cardinal directions for the volley
-const VOLLEY_DIRECTIONS := [Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT, Vector2.UP]
-
-@export var max_health: int = 160
-@export var move_speed: float = 150.0
+@export var max_health: int = 160.0
+@export var move_speed: float = 160.0
 @export var preferred_distance: float = 450.0
 @export var distance_band: float = 80.0  # tolerance around preferred_distance
-@export var attack_cooldown: float = 1.0
-@export var ball_damage: int = 14
+@export var attack_cooldown: float = 2.6
+@export var ball_damage: int = 15
 @export var ball_speed: float = 300.0
-@export var caps_drop_min: int = 10
-@export var caps_drop_max: int = 20
+@export var caps_drop_min: int = 8
+@export var caps_drop_max: int = 16
 @export var attack_sound: AudioStream
 @export var death_sound: AudioStream
 
@@ -39,7 +36,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 	health = max_health
 	player = get_tree().get_first_node_in_group("player")
-	# Stagger initial cooldown so a wave of floaters doesn't volley in sync.
+	# Stagger initial cooldown so a wave of floaters doesn't fire in sync.
 	attack_timer = randf_range(0.0, attack_cooldown * 0.6)
 
 func _physics_process(delta: float) -> void:
@@ -68,20 +65,28 @@ func _physics_process(delta: float) -> void:
 	attack_timer += delta
 	if not fleeing and attack_timer >= attack_cooldown:
 		attack_timer = 0.0
-		_fire_volley()
+		_shoot_at_player()
 
-func _fire_volley() -> void:
+func _shoot_at_player() -> void:
+	# Safety check in case the player gets destroyed right as we fire
+	if player == null or not is_instance_valid(player):
+		return
+
 	_play_sfx_2d(attack_sound)
 	var scene_root := get_tree().current_scene
-	for cardinal in VOLLEY_DIRECTIONS:
-		var ball = BALL_SCENE.instantiate()
-		ball.global_position = global_position
-		ball.rotation = cardinal.angle()
-		if "speed" in ball:
-			ball.speed = ball_speed
-		if "damage" in ball:
-			ball.damage = ball_damage
-		scene_root.add_child(ball)
+	
+	var ball = BALL_SCENE.instantiate()
+	ball.global_position = global_position
+	
+	# Aim the projectile directly at the player
+	ball.look_at(player.global_position)
+	
+	if "speed" in ball:
+		ball.speed = ball_speed
+	if "damage" in ball:
+		ball.damage = ball_damage
+		
+	scene_root.add_child(ball)
 
 func _get_separation_force() -> Vector2:
 	var force := Vector2.ZERO
