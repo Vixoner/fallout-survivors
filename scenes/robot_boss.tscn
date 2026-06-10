@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://dv5uxdaq1t641"]
+
+[ext_resource type="Script" uid="uid://dtp3xu3qek16u" path="res://scripts/robot_boss.gd" id="1_rbot"]
+[ext_resource type="Texture2D" uid="uid://digjdmlh23mx1" path="res://assets/sprites/Enemies/Robot.png" id="2_rbot_tex"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_rbot"]
+radius = 60.0
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_rbot"]
+
+[node name="RobotBoss" type="CharacterBody2D" unique_id=1141251715 groups=["enemies"]]
+scale = Vector2(3, 3)
+collision_mask = 2
+script = ExtResource("1_rbot")
+max_health = 5500
+move_speed = 80.0
+attack_damage = 0
+attack_cooldown = 999.0
+contact_distance = 0.0
+caps_drop_min = 8
+caps_drop_max = 20
+
+[node name="BodySprite" type="Sprite2D" parent="." unique_id=1450958256]
+texture = ExtResource("2_rbot_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=411516706]
+shape = SubResource("CircleShape2D_rbot")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=129761770]
+libraries/ = SubResource("AnimationLibrary_rbot")

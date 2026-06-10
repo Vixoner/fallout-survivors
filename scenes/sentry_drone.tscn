@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://dq3m2is382kdi"]
+
+[ext_resource type="Script" uid="uid://bin215yt57bxb" path="res://scripts/sentry_drone.gd" id="1_drone"]
+[ext_resource type="Texture2D" uid="uid://dvco8pq0752pb" path="res://assets/sprites/Enemies/dron.png" id="2_bb6xo"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_drone"]
+radius = 26.0
+
+[node name="SentryDrone" type="CharacterBody2D" unique_id=253195668 groups=["enemies"]]
+scale = Vector2(1.6, 1.6)
+collision_mask = 2
+script = ExtResource("1_drone")
+max_health = 150
+
+[node name="BodySprite" type="Sprite2D" parent="." unique_id=1553618421]
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("2_bb6xo")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=352477589]
+shape = SubResource("CircleShape2D_drone")

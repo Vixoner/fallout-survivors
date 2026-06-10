@@ -3,6 +3,9 @@ extends Area2D
 var speed: float = 800.0
 var damage: int = 10
 var is_crit: bool = false
+# What group this bullet damages. Default "enemies" for player-fired bullets;
+# robot boss sets "player" to fire pistol shots back at the player.
+var target_group: String = "enemies"
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_PAUSABLE
@@ -25,6 +28,12 @@ func _physics_process(delta):
 	position += transform.x * speed * delta
 
 func _on_body_entered(body):
-	if body.is_in_group("enemies"):
-		body.take_damage(damage, is_crit)
-		queue_free()
+	if not body.is_in_group(target_group):
+		return
+	if body.has_method("take_damage"):
+		# Player's take_damage has just (amount); enemies use (amount, is_crit).
+		if target_group == "player":
+			body.take_damage(damage)
+		else:
+			body.take_damage(damage, is_crit)
+	queue_free()

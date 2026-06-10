@@ -25,7 +25,12 @@ const ENEMY_SCENES = {
 	"zombie_big":   preload("res://scenes/enemy_big.tscn"),
 	"floater":      preload("res://scenes/floater.tscn"),
 	"zombie_boss":  preload("res://scenes/enemy_boss.tscn"),
+	"robot_boss":   preload("res://scenes/robot_boss.tscn"),
 }
+
+# Boss rotation. Indexed by (boss_count - 1) % len so the list cycles forever.
+# Add new bosses to the end of this list to extend rotation.
+const BOSS_POOL := ["zombie_boss", "robot_boss"]
 
 # Spawn tiers — picked by "whichever further" of player level OR elapsed time.
 # Each tier carries a weighted enemy pool.
@@ -43,7 +48,9 @@ const XP_PER_ENEMY = {
 	"zombie_small": 12,
 	"floater": 20,
 	"zombie_big": 25,
+	"sentry_drone": 5,
 	"zombie_boss": 200,
+	"robot_boss": 300,
 }
 
 const PSYCHOPAT_BONUS := 0.10  # +10% XP from humanoid kills
@@ -66,6 +73,7 @@ var _kills: int = 0
 var _boss_phase: bool = false       # true between "level hits multiple of 10" and "boss dead"
 var _boss_pending: bool = false     # true while waiting for enemies_alive==0 before spawning boss
 var _boss_instance: Node = null
+var _boss_type_name: String = ""    # which boss is currently spawned (or "" if none)
 
 # Pause / shop / etc.
 var _pause_menu = null
@@ -109,12 +117,15 @@ func _start_music() -> void:
 	mp.autoplay = true
 	add_child(mp)
 
-func _input(event):
+func _input(event): # tylko do testów, trzeba usunac ltaer
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ENTER:
 			for enemy in get_tree().get_nodes_in_group("enemies"):
 				if enemy != _boss_instance:
 					enemy.die()
+		elif event.keycode == KEY_BACKSPACE: # debug: level 20
+			if player and player.has_method("add_xp"):
+				player.add_xp(11500)
 
 func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("ui_cancel"):
@@ -236,8 +247,10 @@ func _on_enemy_died(pos: Vector2, caps_count: int, type_name: String) -> void:
 	# Bloody Mess: 5% chance to spawn a small AoE on death.
 	if player.has_perk("krwawa_laznia") and randf() < BLOODY_MESS_CHANCE:
 		_spawn_bloody_mess(pos)
-	# Boss-specific cleanup
-	if type_name == "zombie_boss":
+	# Boss-specific cleanup — any boss type that's currently the active boss triggers
+	# the post-fight flow. _boss_type_name was set at spawn.
+	if type_name != "" and type_name == _boss_type_name:
+		_boss_type_name = ""
 		_on_boss_died()
 
 func _spawn_caps(spawn_pos: Vector2, count: int) -> void:
@@ -338,17 +351,27 @@ func _after_modal_closed() -> void:
 # ── Boss flow ────────────────────────────────────────────────────────────────
 
 func _spawn_boss() -> void:
-	var boss = ENEMY_SCENES["zombie_boss"].instantiate()
+	var boss_type: String = _pick_boss_type_for_level()
+	_boss_type_name = boss_type
+	var boss = ENEMY_SCENES[boss_type].instantiate()
 	boss.global_position = _get_spawn_position()
 	var lvl: int = int(player.level)
 	if "max_health" in boss:
 		boss.max_health = int(round(boss.max_health * (1.0 + lvl * 0.03)))
 	if "attack_damage" in boss:
 		boss.attack_damage = int(round(boss.attack_damage * (1.0 + lvl * 0.02)))
-	boss.died.connect(_on_enemy_died.bind("zombie_boss"))
+	boss.died.connect(_on_enemy_died.bind(boss_type))
 	add_child(boss)
 	_boss_instance = boss
 	enemies_alive += 1
+
+func _pick_boss_type_for_level() -> String:
+	# Boss spawns at level 10, 20, 30, ... — boss_count = level/10.
+	var boss_count: int = int(player.level) / 10
+	if boss_count <= 0:
+		boss_count = 1
+	var idx: int = (boss_count - 1) % BOSS_POOL.size()
+	return BOSS_POOL[idx]
 
 func _on_boss_died() -> void:
 	_boss_phase = false
