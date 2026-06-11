@@ -125,16 +125,6 @@ func _start_music() -> void:
 	cm.name = "CombatMusic"
 	add_child(cm)
 
-func _input(event): # tylko do testów, trzeba usunac ltaer
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_ENTER:
-			for enemy in get_tree().get_nodes_in_group("enemies"):
-				if enemy != _boss_instance:
-					enemy.die()
-		elif event.keycode == KEY_BACKSPACE: # debug: level 20
-			if player and player.has_method("add_xp"):
-				player.add_xp(11600)
-
 func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("ui_cancel"):
 		_handle_escape()

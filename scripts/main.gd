@@ -98,13 +98,7 @@ func _start_music() -> void:
 	var cm := preload("res://scripts/combat_music.gd").new()
 	cm.name = "CombatMusic"
 	add_child(cm)
-
-func _input(event):
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_ENTER:
-			for enemy in get_tree().get_nodes_in_group("enemies"):
-				enemy.die()
-
+	
 func _process(delta):
 	if Input.is_action_just_pressed("ui_cancel"):
 		_handle_escape()

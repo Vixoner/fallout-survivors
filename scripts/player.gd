@@ -127,7 +127,7 @@ func _apply_class() -> void:
 		xp_to_next = 100 + 50 * level
 		pending_stat_points = 0
 		perks = []
-		grenades = {"frag": 0}
+		grenades = {"frag": 4}
 		_update_grenades_ui()
 		return
 	var cls: Dictionary = GameState.selected_class

@@ -20,35 +20,41 @@ const C_TAG      = Color(0.20, 0.60, 0.20)
 
 const ALL_ITEMS = [
 	{"name": "Talizman Szczęścia",  "type": "PRZEDMIOT", "desc": "Stara figurka znaleziona w gruzach kasyna. Mówią, że przynosi fart.",
-		"cost": 5,  "stats": [["luck", 2]]},
+		"cost": 7,  "stats": [["luck", 4]]},
 	{"name": "Okulary Celownika",   "type": "PRZEDMIOT", "desc": "Wojskowe okulary z zoom x2. Dostrzegasz to, czego inni nie widzą.",
-		"cost": 7,  "stats": [["perception", 2]]},
+		"cost": 9,  "stats": [["perception", 4]]},
 	{"name": "Zbroja Pustkowia",    "type": "PRZEDMIOT", "desc": "Połatana, ciężka, ale wytrzymała. Ogranicza ruchy, ale chroni skórę.",
-		"cost": 8,  "stats": [["endurance", 3], ["agility", -1]]},
+		"cost": 10,  "stats": [["endurance", 6], ["agility", -3]]},
 	{"name": "Pigułki Charyzmatu",  "type": "PRZEDMIOT", "desc": "Skład nieznany, działanie potwierdzone. Skutki uboczne: bóle głowy.",
-		"cost": 5,  "stats": [["charisma", 2], ["perception", -1]]},
+		"cost": 7,  "stats": [["charisma", 5], ["perception", -2]]},
 	{"name": "Nootrop",             "type": "PRZEDMIOT", "desc": "Preparat z przedwojennego laboratorium. Mózg przyspiesza, ciało zwalnia.",
-		"cost": 8,  "stats": [["intelligence", 3], ["strength", -1]]},
+		"cost": 10,  "stats": [["intelligence", 6], ["strength", -3]]},
 	{"name": "Buty Kuriera",        "type": "PRZEDMIOT", "desc": "Przetarte, ale lekkie. Przeszły tysiąc mil po pustkowiach.",
-		"cost": 7,  "stats": [["agility", 2]]},
+		"cost": 8,  "stats": [["agility", 4]]},
 	{"name": "Odżywka Siłacza",     "type": "PRZEDMIOT", "desc": "Proszek o wątpliwym smaku. Mięśnie rosną, inteligencja... mniej.",
-		"cost": 8,  "stats": [["strength", 3], ["intelligence", -1]]},
+		"cost": 10,  "stats": [["strength", 6], ["intelligence", -3]]},
 	{"name": "Szczęśliwa Moneta",   "type": "PRZEDMIOT", "desc": "Złota moneta sprzed wojny. Przynosi szczęście, ale kradnie zmysły.",
-		"cost": 8,  "stats": [["luck", 3], ["perception", -1]]},
+		"cost": 10,  "stats": [["luck", 6], ["perception", -3]]},
 	{"name": "Peryskop Zwiadowcy",  "type": "PRZEDMIOT", "desc": "Pozwala widzieć za rogiem. Niezbędne na każdym polu bitwy.",
-		"cost": 15,  "stats": [["perception", 3]]},
+		"cost": 18,  "stats": [["perception", 6]]},
 	{"name": "Sterydy Pustkowi",    "type": "PRZEDMIOT", "desc": "Zakazane przed wojną. Teraz nikt nie zakazuje niczego nikomu.",
-		"cost": 8,  "stats": [["strength", 3], ["luck", -1]]},
+		"cost": 10,  "stats": [["strength", 6], ["luck", -3]]},
 	{"name": "Apteczka Polowa",     "type": "PRZEDMIOT", "desc": "Wzmacnia ciało i wolę walki. Coś jednak musi ucierpieć.",
-		"cost": 5,  "stats": [["endurance", 2], ["charisma", -1]]},
+		"cost": 7,  "stats": [["endurance", 5], ["charisma", -3]]},
 	{"name": "Podręcznik Taktyki",  "type": "PRZEDMIOT", "desc": "Przedwojenny poradnik wojskowy. Więcej myślenia, mniej siły brute.",
-		"cost": 10,  "stats": [["intelligence", 2], ["perception", 1], ["strength", -1]]},
+		"cost": 12,  "stats": [["intelligence", 4], ["perception", 3], ["strength", -3]]},
 	{"name": "Brylantyna Pustkowia", "type": "PRZEDMIOT", "desc": "Puszka z przedwojennej fabryki. Jeden gest włosem — i już cię lubią.",
-		"cost": 4,  "stats": [["charisma", 1]]},
+		"cost": 5,  "stats": [["charisma", 3]]},
 	{"name": "Kurs Perswazji",       "type": "PRZEDMIOT", "desc": "Kaseta VHS. Oglądałeś ją pięćdziesiąt razy.",
-		"cost": 7,  "stats": [["charisma", 2]]},
+		"cost": 9,  "stats": [["charisma", 5]]},
 	{"name": "Garnitur Dyplomaty",   "type": "PRZEDMIOT", "desc": "Dobrze skrojony, ale krępuje ruchy. Wyglądasz lepiej niż się czujesz.",
-		"cost": 9,  "stats": [["charisma", 2], ["agility", -1]]},
+		"cost": 11,  "stats": [["charisma", 5], ["agility", -3]]},
+	{"name": "Eksperymentalny Booster", "type": "PRZEDMIOT", "desc": "Niemal sztuka alchemii. Daje ci moc, ale niszczy resztę.",
+		"cost": 20,  "stats": [["strength", 8], ["endurance", -5]]},
+	{"name": "Wszczep Cybernetyczny", "type": "PRZEDMIOT", "desc": "Nielegalna implantacja prosto z czarnego rynku. Tańsze niż prawdziwe oko.",
+		"cost": 25,  "stats": [["perception", 8], ["charisma", -4]]},
+	{"name": "Mieszanka Wojownika",  "type": "PRZEDMIOT", "desc": "Nieznany koktajl z laboratorium. Strzeż się skutków ubocznych.",
+		"cost": 22,  "stats": [["endurance", 7], ["agility", 3], ["intelligence", -5]]},
 	{"name": "Mała Apteczka",        "type": "APTECZKA",  "desc": "Stimpak klasy C. Podstawowy środek medyczny.",
 		"cost": 6,  "heal": 0.15},
 	{"name": "Średnia Apteczka",     "type": "APTECZKA",  "desc": "Stimpak klasy B. Standardowy wojskowy zestaw medyczny.",
@@ -62,9 +68,14 @@ const ALL_ITEMS = [
 var _player: Node = null
 var _stat_labels: Dictionary = {}
 var _reroll_cost: int = 5
+# Refresh cap (endless only): base 1 + 1 per 5 charisma. Story has no refresh
+# at all so this is never consulted.
+var _refresh_cap: int = 1
+var _refresh_used: int = 0
 var _cards_hbox: HBoxContainer = null
 var _caps_label: Label = null
 var _reroll_cost_lbl: Label = null
+var _reroll_btn: Button = null
 var _tooltip: Control = null
 
 # Endless mode adds an extra card row for weapon upgrades. Set by endless.gd
@@ -120,6 +131,8 @@ func _ready():
 	if _player:
 		_player.movement_blocked = true
 		_collect_all_caps()
+		# Endless: refresh budget = 1 + floor(charisma/5). Story doesn't refresh.
+		_refresh_cap = 1 + int(_player.charisma / 5)
 	_build_ui()
 
 # funkcja która zbiera instant wszystkie kapsle które są w trakcie przyciągania
@@ -177,21 +190,22 @@ func _build_ui():
 
 	var bottom = HBoxContainer.new()
 
-	# Reroll (lewa strona)
-	var reroll_vbox = VBoxContainer.new()
-	reroll_vbox.add_theme_constant_override("separation", 4)
-	var reroll_btn = _button("[ ODŚWIEŻ ]", 17, C_BTN_BUY, C_BTN_HOV)
-	reroll_btn.custom_minimum_size = Vector2(180, 42)
-	reroll_btn.pressed.connect(_on_reroll.bind(reroll_btn))
-	reroll_vbox.add_child(reroll_btn)
-	_reroll_cost_lbl = _label("KOSZT: %d KAPSLI" % _reroll_cost, 12, C_CAPS)
-	_reroll_cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	reroll_vbox.add_child(_reroll_cost_lbl)
-	var reroll_margin = MarginContainer.new()
-	reroll_margin.add_theme_constant_override("margin_left", 12)
-	reroll_margin.add_theme_constant_override("margin_bottom", 8)
-	reroll_margin.add_child(reroll_vbox)
-	bottom.add_child(reroll_margin)
+	# Reroll (lewa strona) — endless only. Story shop has no refresh.
+	if endless_mode:
+		var reroll_vbox = VBoxContainer.new()
+		reroll_vbox.add_theme_constant_override("separation", 4)
+		_reroll_btn = _button("[ ODŚWIEŻ ]", 17, C_BTN_BUY, C_BTN_HOV)
+		_reroll_btn.custom_minimum_size = Vector2(180, 42)
+		_reroll_btn.pressed.connect(_on_reroll.bind(_reroll_btn))
+		reroll_vbox.add_child(_reroll_btn)
+		_reroll_cost_lbl = _label(_refresh_status_text(), 12, C_CAPS)
+		_reroll_cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		reroll_vbox.add_child(_reroll_cost_lbl)
+		var reroll_margin = MarginContainer.new()
+		reroll_margin.add_theme_constant_override("margin_left", 12)
+		reroll_margin.add_theme_constant_override("margin_bottom", 8)
+		reroll_margin.add_child(reroll_vbox)
+		bottom.add_child(reroll_margin)
 
 	var spacer = Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -377,19 +391,34 @@ func _on_buy_upgrade(upg: Dictionary, btn: Button, cost_lbl: Label, actual_cost:
 func _on_reroll(_btn: Button):
 	if _player == null:
 		return
+	if _refresh_used >= _refresh_cap:
+		_flash_reroll_label_red()
+		return
 	if _player.caps < _reroll_cost:
-		var tween = create_tween()
-		tween.tween_property(_reroll_cost_lbl, "modulate", Color(1, 0.2, 0.2), 0.08)
-		tween.tween_property(_reroll_cost_lbl, "modulate", Color(1, 1, 1), 0.25)
+		_flash_reroll_label_red()
 		return
 	_player.caps -= _reroll_cost
 	_player.add_caps(0)
 	_caps_label.text = "KAPSLE: %d" % _player.caps
+	_refresh_used += 1
 	_reroll_cost = int(_reroll_cost * 1.25)
-	_reroll_cost_lbl.text = "KOSZT: %d KAPSLI" % _reroll_cost
+	_reroll_cost_lbl.text = _refresh_status_text()
+	if _refresh_used >= _refresh_cap and is_instance_valid(_reroll_btn):
+		_reroll_btn.disabled = true
+		_reroll_btn.text = "[ WYCZERPANE ]"
 	for child in _cards_hbox.get_children():
 		child.queue_free()
 	_spawn_cards()
+
+func _refresh_status_text() -> String:
+	return "KOSZT: %d KAPSLI   [%d/%d]" % [_reroll_cost, _refresh_used, _refresh_cap]
+
+func _flash_reroll_label_red() -> void:
+	if not is_instance_valid(_reroll_cost_lbl):
+		return
+	var tween = create_tween()
+	tween.tween_property(_reroll_cost_lbl, "modulate", Color(1, 0.2, 0.2), 0.08)
+	tween.tween_property(_reroll_cost_lbl, "modulate", Color(1, 1, 1), 0.25)
 
 func _make_card(item: Dictionary) -> Control:
 	var card = PanelContainer.new()
