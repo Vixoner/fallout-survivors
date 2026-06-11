@@ -87,6 +87,16 @@ func _ready():
 	_update_hp_bar()
 	_setup_weapon_manager()
 	_apply_melee_range_perks()
+	# Melee weapon sprite is only visible during the attack swing animation.
+	# Hide on spawn, hide again whenever the swing finishes.
+	if is_instance_valid(weapon_sprite):
+		weapon_sprite.visible = false
+	if is_instance_valid(weapon_anim_player):
+		weapon_anim_player.animation_finished.connect(_on_melee_anim_finished)
+
+func _on_melee_anim_finished(_anim_name: StringName) -> void:
+	if is_instance_valid(weapon_sprite):
+		weapon_sprite.visible = false
 
 # Resize AttackRange's CollisionShape2D based on owned perks. Called from
 # _ready after class is applied, and from add_perk so endless picks apply live.
@@ -508,6 +518,9 @@ func handle_weapon_fire(delta: float):
 
 # Zmiana nazwy funkcji dla porządku
 func play_knife_animation(direction: Vector2):
+	# Show the melee weapon sprite for the swing; _on_melee_anim_finished hides it.
+	if is_instance_valid(weapon_sprite):
+		weapon_sprite.visible = true
 	if abs(direction.y) > abs(direction.x):
 		if direction.y > 0:
 			weapon_anim_player.play("bat_attack_down")

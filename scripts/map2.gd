@@ -15,9 +15,10 @@ const SPAWN_MAX_DIST = 1100.0
 
 # Typy przeciwników
 const ENEMY_SCENES = {
-	"handy": preload("res://scenes/handy.tscn"),
-	"gutsy":   preload("res://scenes/gutsy.tscn"),
-	"robot_boss":  preload("res://scenes/robot_boss.tscn"),
+	"handy":      preload("res://scenes/handy.tscn"),
+	"gutsy":      preload("res://scenes/gutsy.tscn"),
+	"rocky":      preload("res://scenes/rocky.tscn"),
+	"robot_boss": preload("res://scenes/robot_boss.tscn"),
 }
 
 # Definicje fal: cooldown spawnu, rozmiar grupy, typy i liczba przeciwników
@@ -30,18 +31,22 @@ const WAVES = [
 	{"cooldown": 2.5, "group_size": 3, "enemies": {
 		"handy": {"count": 20, "champs": 1},
 		"gutsy":   {"count": 6,  "champs": 0},
+		"rocky":   {"count": 2,   "champs": 0},
 	}},
-	{"cooldown": 2.0, "group_size": 4, "enemies": {
+	{"cooldown": 2.0, "group_size": 6, "enemies": {
 		"handy": {"count": 30, "champs": 3},
 		"gutsy":   {"count": 10,  "champs": 3},
+		"rocky":   {"count": 4,   "champs": 1},
 	}},
-	{"cooldown": 2.0, "group_size": 4, "enemies": {
+	{"cooldown": 2.0, "group_size": 6, "enemies": {
 		"handy": {"count": 40, "champs": 15},
 		"gutsy":   {"count": 20,  "champs": 8},
+		"rocky":   {"count": 8,   "champs": 2},
 	}},
-	{"cooldown": 1.5, "group_size": 5, "enemies": {
+	{"cooldown": 1.5, "group_size": 10, "enemies": {
 		"robot_boss":  {"count": 1,  "champs": 0},
 		"gutsy":      {"count": 4,  "champs": 0},
+		"rocky":      {"count": 2,  "champs": 0},
 	}},
 ]
 

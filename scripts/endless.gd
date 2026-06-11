@@ -25,9 +25,10 @@ const ENEMY_SCENES = {
 	"zombie_big":   preload("res://scenes/enemy_big.tscn"),
 	"floater":      preload("res://scenes/floater.tscn"),
 	"handy":        preload("res://scenes/handy.tscn"),
+	"gutsy":        preload("res://scenes/gutsy.tscn"),
+	"rocky":        preload("res://scenes/rocky.tscn"),
 	"zombie_boss":  preload("res://scenes/enemy_boss.tscn"),
 	"robot_boss":   preload("res://scenes/robot_boss.tscn"),
-	"gutsy":      preload("res://scenes/gutsy.tscn"),
 }
 
 # Boss rotation. Indexed by (boss_count - 1) % len so the list cycles forever.
@@ -48,11 +49,11 @@ const ERAS = [
 		{"level": 5,  "time": 200.0, "pool": {"rat": 0.30, "zombie_small": 0.50, "floater": 0.20}},
 		{"level": 8,  "time": 360.0, "pool": {"rat": 0.15, "zombie_small": 0.35, "zombie_big": 0.20, "floater": 0.30}},
 	],
-	# Era 2 — handy filler robot. The ranged robot enemy will be added here
-	# once authored; floater stays in era 1.
+	# Era 2 — robot era. Handy (melee), gutsy, rocky (long-range missile artillery).
 	[
-		{"level": 1, "time": 0.0, "pool": {"handy": 1.0}},
+		{"level": 1,  "time": 0.0,   "pool": {"handy": 1.0}},
 		{"level": 3,  "time": 90.0,  "pool": {"handy": 0.60, "gutsy": 0.40}},
+		{"level": 5,  "time": 200.0, "pool": {"handy": 0.35, "gutsy": 0.4, "rocky": 0.25}},
 	],
 ]
 
@@ -63,6 +64,7 @@ const XP_PER_ENEMY = {
 	"floater": 20,
 	"handy": 22,
 	"zombie_big": 25,
+	"rocky": 32,
 	"sentry_drone": 5,
 	"zombie_boss": 300,
 	"robot_boss": 500,

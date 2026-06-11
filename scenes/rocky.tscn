@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://b41bly7g4x77b"]
+
+[ext_resource type="Script" uid="uid://bqi4jq4yl5n08" path="res://scripts/rocky.gd" id="1_rocky"]
+[ext_resource type="Texture2D" uid="uid://c1y7qschsar55" path="res://assets/sprites/Enemies/rocky.png" id="2_rocky_tex"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_rocky"]
+radius = 42.0
+
+[node name="Rocky" type="CharacterBody2D" unique_id=251853590 groups=["enemies"]]
+scale = Vector2(2, 2)
+collision_mask = 2
+script = ExtResource("1_rocky")
+
+[node name="BodySprite" type="Sprite2D" parent="." unique_id=31837103]
+scale = Vector2(0.15, 0.15)
+texture = ExtResource("2_rocky_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1985204934]
+shape = SubResource("CircleShape2D_rocky")
