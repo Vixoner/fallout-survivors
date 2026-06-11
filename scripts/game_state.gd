@@ -8,6 +8,11 @@ static var endless_mode: bool = false
 static var endless_starting_weapon: String = "pistol"
 static var tutorial_mode: bool = false
 
+# Carried over from map 1 → map 2 after defeating map 1's boss. Player applies
+# these in _apply_class (overriding class defaults) and clears the dict after.
+# Empty dict = fresh start (default class behavior).
+static var persisted_stats: Dictionary = {}
+
 const STAT_ORDER = ["strength","perception","endurance","charisma","intelligence","agility","luck"]
 const STAT_INFO = {
 	"strength":     {"label": "SIŁA",         "desc": "Wpływa na obrażenia w walce wręcz."},

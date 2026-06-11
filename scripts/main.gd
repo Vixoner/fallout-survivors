@@ -93,28 +93,11 @@ func _ready():
 		start_wave(0)
 
 func _start_music() -> void:
-	# Try .ogg first (best for looping), .mp3 as fallback. Bus = "Music" so
-	# the "Głośność muzyki" slider in SettingsPanel controls volume.
-	var candidate_paths := [
-		"res://assets/audio/music/metal_on_metal.ogg",
-		"res://assets/audio/music/metal_on_metal.mp3",
-	]
-	var stream: AudioStream = null
-	for path in candidate_paths:
-		if ResourceLoader.exists(path):
-			stream = load(path)
-			break
-	if stream == null:
-		push_warning("Background music not found at assets/audio/music/metal_on_metal.(ogg|mp3)")
-		return
-	if "loop" in stream:
-		stream.loop = true
-	var music_player := AudioStreamPlayer.new()
-	music_player.name = "MusicPlayer"
-	music_player.bus = "Music"
-	music_player.stream = stream
-	music_player.autoplay = true
-	add_child(music_player)
+	# Combat music alternates through tracks defined in CombatMusic helper.
+	# Bus = "Music" so the "Głośność muzyki" slider controls volume.
+	var cm := preload("res://scripts/combat_music.gd").new()
+	cm.name = "CombatMusic"
+	add_child(cm)
 
 func _input(event):
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -230,7 +213,9 @@ func check_wave_complete():
 			show_shop()
 		else:
 			await get_tree().create_timer(1.2).timeout
-			show_victory_screen()
+			# Map 1 boss defeat → cutscene → map 2 (carrying SPECIAL + caps + grenades).
+			# Map 1 only — map 2 is handled by map2.gd which has its own ending cutscene.
+			_transition_to_map2()
 
 func _on_player_game_over():
 	_game_over_shown = true
@@ -266,6 +251,32 @@ func show_victory_screen():
 	screen.zombies_killed = _zombies_killed
 	screen.elapsed_time = _run_time
 	add_child(screen)
+
+# Map 1 → Map 2 handoff. Mark map 1 completed, snapshot the player's current
+# state, advance selected_map, and route through the cutscene. The cutscene
+# loads main_map2.tscn; player.gd's _apply_class consumes persisted_stats.
+func _transition_to_map2():
+	_victory_shown = true
+	GameState.save_record(GameState.selected_class.get("id", ""), _run_time)
+	GameState.mark_level_completed(GameState.selected_map)
+	GameState.persisted_stats = _snapshot_player_state()
+	GameState.selected_map = 1
+	get_tree().change_scene_to_file("res://scenes/map2_intro.tscn")
+
+func _snapshot_player_state() -> Dictionary:
+	if player == null:
+		return {}
+	return {
+		"strength":     int(player.strength),
+		"perception":   int(player.perception),
+		"endurance":    int(player.endurance),
+		"charisma":     int(player.charisma),
+		"intelligence": int(player.intelligence),
+		"agility":      int(player.agility),
+		"luck":         int(player.luck),
+		"caps":         int(player.caps),
+		"grenades":     (player.grenades as Dictionary).duplicate(),
+	}
 
 func update_wave_label():
 	var label = get_tree().get_first_node_in_group("wave_label")

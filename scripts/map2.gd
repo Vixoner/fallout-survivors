@@ -5,6 +5,7 @@ const SHOP_SCRIPT     = preload("res://scripts/shop.gd")
 const TUTORIAL_SCRIPT = preload("res://scripts/tutorial.gd")
 const PAUSE_MENU_SCRIPT = preload("res://scripts/pause_menu.gd")
 const VICTORY_SCRIPT = preload("res://scripts/victory_screen.gd")
+const ENDING_CUTSCENE_SCRIPT = preload("res://scripts/ending_cutscene.gd")
 const GAME_OVER_SCRIPT = preload("res://scripts/game_over_screen.gd")
 
 const SPAWN_MIN_DIST = 700.0
@@ -83,28 +84,9 @@ func _ready():
 		start_wave(0)
 
 func _start_music() -> void:
-	# Try .ogg first (best for looping), .mp3 as fallback. Bus = "Music" so
-	# the "Głośność muzyki" slider in SettingsPanel controls volume.
-	var candidate_paths := [
-		"res://assets/audio/music/metal_on_metal.ogg",
-		"res://assets/audio/music/metal_on_metal.mp3",
-	]
-	var stream: AudioStream = null
-	for path in candidate_paths:
-		if ResourceLoader.exists(path):
-			stream = load(path)
-			break
-	if stream == null:
-		push_warning("Background music not found at assets/audio/music/metal_on_metal.(ogg|mp3)")
-		return
-	if "loop" in stream:
-		stream.loop = true
-	var music_player := AudioStreamPlayer.new()
-	music_player.name = "MusicPlayer"
-	music_player.bus = "Music"
-	music_player.stream = stream
-	music_player.autoplay = true
-	add_child(music_player)
+	var cm := preload("res://scripts/combat_music.gd").new()
+	cm.name = "CombatMusic"
+	add_child(cm)
 
 func _input(event):
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -220,6 +202,9 @@ func check_wave_complete():
 			show_shop()
 		else:
 			await get_tree().create_timer(1.2).timeout
+			# Final boss defeated — always play the ending cutscene (whether the
+			# player came through map 1 → map 2 or jumped straight here).
+			await _show_ending_cutscene()
 			show_victory_screen()
 
 func _on_player_game_over():
@@ -247,6 +232,14 @@ func show_shop():
 	await shop.shop_closed
 	_in_shop = false
 	start_wave(current_wave + 1)
+
+func _show_ending_cutscene() -> void:
+	# Reuse _wave_ending so Esc doesn't open the pause menu during the cutscene.
+	_wave_ending = true
+	var c = ENDING_CUTSCENE_SCRIPT.new()
+	add_child(c)
+	await c.closed
+	_wave_ending = false
 
 func show_victory_screen():
 	_victory_shown = true

@@ -9,6 +9,8 @@
 collision_mask = 2
 script = ExtResource("1_lebb8")
 attack_cooldown = 1.0
+caps_drop_min = 5
+caps_drop_max = 10
 
 [node name="BodySprite" type="Sprite2D" parent="." unique_id=2051334662]
 scale = Vector2(0.3, 0.3)

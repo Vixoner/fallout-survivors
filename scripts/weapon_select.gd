@@ -16,11 +16,12 @@ const C_DIM      = Color(0.20, 0.55, 0.20)
 const C_BTN      = Color(0.05, 0.22, 0.05)
 const C_BTN_HOV  = Color(0.08, 0.34, 0.08)
 
+# Pistolet (slot 1) jest gwarantowany — gracz wybiera tylko drugą broń.
 const WEAPONS := [
 	{
-		"id": "pistol",
-		"name": "PISTOLET 10MM",
-		"desc": "Szybki ogień, niskie obrażenia, bez kosztu krytyków. Niezawodny.",
+		"id": "karabin",
+		"name": "KARABIN",
+		"desc": "Większa szybkostrzelność i lekko wyższe obrażenia od pistoletu. Inny zestaw modyfikacji.",
 	},
 	{
 		"id": "laser",

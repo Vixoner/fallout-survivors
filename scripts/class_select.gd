@@ -24,31 +24,28 @@ const CLASSES = [
 	{
 		"id": "survivor",
 		"name": "OCALAŁY",
-		"description": "Wszechstronny bojownik pustkowi.",
-		"stats": {"strength":5,"perception":5,"endurance":5,"charisma":5,"intelligence":5,"agility":5,"luck":5},
-		"starting_grenades": {"frag": 2}
+		"description": "Wszechstronny bojownik pustkowi",
+		"stats": {"strength":15,"perception":15,"endurance":15,"charisma":15,"intelligence":15,"agility":15,"luck":15},
+		"starting_grenades": {"frag": 2},
+		"starting_perks": ["wampir", "strzelec_wyborowy", "lepsze_krytyki", "lekka_stopa"]
 	},
 	{
 		"id": "raider",
 		"name": "RAIDER",
 		"description": "Siła ponad wszystko.",
-		"stats": {"strength":9,"perception":3,"endurance":6,"charisma":3,"intelligence":3,"agility":6,"luck":5},
-		"starting_grenades": {"frag": 3}
+		"stats": {"strength":40,"perception":1,"endurance":45,"charisma":1,"intelligence":1,"agility":1,"luck":20},
+		"starting_grenades": {"frag": 1},
+		"starting_perks": ["ooga_booga", "wielki_kij"]
 	},
 	{
 		"id": "gunslinger",
 		"name": "STRZELEC",
 		"description": "Precyzja ponad wszystko.",
-		"stats": {"strength":3,"perception":9,"endurance":4,"charisma":4,"intelligence":6,"agility":6,"luck":3},
-		"starting_grenades": {"frag": 1}
-	},
-	{
-		"id": "gambler",
-		"name": "HAZARDZISTA",
-		"description": "Fortuna sprzyja śmiałym.",
-		"stats": {"strength":3,"perception":3,"endurance":4,"charisma":7,"intelligence":5,"agility":5,"luck":8},
-		"starting_grenades": {"frag": 1}
-	},
+		"stats": {"strength":1,"perception":40,"endurance":1,"charisma":5,"intelligence":5,"agility":30,"luck":30},
+		"starting_grenades": {"frag": 4},
+		"starting_perks": ["krwawa_laznia", "strzelec_wyborowy", "lepsze_krytyki"]
+		
+	}
 ]
 
 

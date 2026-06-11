@@ -127,5 +127,19 @@ func _spawn_bullet(origin: Vector2, angle: float) -> void:
 		bullet.dot_tick_damage = current_weapon.dot_tick_damage
 	if "dot_slow" in bullet:
 		bullet.dot_slow = current_weapon.dot_slow
+	# Karabin Amunicja Wybuchowa
+	if "explosive" in bullet:
+		bullet.explosive = current_weapon.explosive
+	if "explosive_radius" in bullet:
+		bullet.explosive_radius = current_weapon.explosive_radius
+	if "explosive_dmg_ratio" in bullet:
+		bullet.explosive_dmg_ratio = current_weapon.explosive_dmg_ratio
+	# Karabin Zatrute Naboje
+	if "poison" in bullet:
+		bullet.poison = current_weapon.poison
+	if "poison_duration" in bullet:
+		bullet.poison_duration = current_weapon.poison_duration
+	if "poison_tick_dmg" in bullet:
+		bullet.poison_tick_dmg = current_weapon.poison_tick_dmg
 	var scene_root = get_tree().current_scene
 	scene_root.add_child(bullet)

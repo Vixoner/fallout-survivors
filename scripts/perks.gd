@@ -61,6 +61,18 @@ const POOL := [
 		"name": "TAJEMNICZY NIEZNAJOMY",
 		"desc": "Co ~30s zaprzyjaźniona wiązka laserowa razi losowego wroga (120 obr).",
 	},
+	{
+		"id": "ooga_booga",
+		"name": "OOGA BOOGA",
+		"desc": "W gaciach znalazłeś wielkiego kija. Atak wręcz +25% obrażeń i razi w obszarze wokół trafionego wroga.",
+		"requirements": {"strength": 20},
+	},
+	{
+		"id": "wielki_kij",
+		"name": "ALE MAM WIELKIEGO KIJA",
+		"desc": "Ten kij naprawdę jest wielki. +50% zasięgu auto-ataku wręcz.",
+		"requirements": {"strength": 40},
+	},
 ]
 
 # All unowned perks, in pool order. Used by the level-up panel — the player

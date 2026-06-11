@@ -168,7 +168,11 @@ func _build_map_card(index: int, data: Dictionary, locked: bool) -> Control:
 
 func _on_map_selected(index: int) -> void:
 	GameState.selected_map = index
-	get_tree().change_scene_to_file(MAP_SCENES[index])
+	# Story intro only plays before the first map. Other maps load directly.
+	if index == 0:
+		get_tree().change_scene_to_file("res://scenes/story_intro.tscn")
+	else:
+		get_tree().change_scene_to_file(MAP_SCENES[index])
 
 # ── Pomocnicze ────────────────────────────────────────────────────────────────
 

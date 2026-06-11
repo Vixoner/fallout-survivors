@@ -119,25 +119,9 @@ func _ready() -> void:
 	_update_level_label()
 
 func _start_music() -> void:
-	var candidate_paths := [
-		"res://assets/audio/music/metal_on_metal.ogg",
-		"res://assets/audio/music/metal_on_metal.mp3",
-	]
-	var stream: AudioStream = null
-	for path in candidate_paths:
-		if ResourceLoader.exists(path):
-			stream = load(path)
-			break
-	if stream == null:
-		return
-	if "loop" in stream:
-		stream.loop = true
-	var mp := AudioStreamPlayer.new()
-	mp.name = "MusicPlayer"
-	mp.bus = "Music"
-	mp.stream = stream
-	mp.autoplay = true
-	add_child(mp)
+	var cm := preload("res://scripts/combat_music.gd").new()
+	cm.name = "CombatMusic"
+	add_child(cm)
 
 func _input(event): # tylko do testów, trzeba usunac ltaer
 	if event is InputEventKey and event.pressed and not event.echo:

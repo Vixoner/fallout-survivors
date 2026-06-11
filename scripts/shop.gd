@@ -80,6 +80,18 @@ const WEAPON_UPGRADES = [
 	{"id": "pistol_magnum",       "weapon": "pistol",  "name": "MAGNUM",
 		"desc": "+50% obrażeń pistoletu, szybkostrzelność ÷ 1.4.",
 		"cost": 35, "exclusive_with": []},
+	{"id": "karabin_drum_mag",    "weapon": "karabin", "name": "MAGAZYNEK BĘBNOWY",
+		"desc": "Szybkostrzelność karabinu × 1.43 (0.20s → 0.14s).",
+		"cost": 35, "exclusive_with": []},
+	{"id": "karabin_ap_rounds",   "weapon": "karabin", "name": "POCISKI PRZECIWPANCERNE",
+		"desc": "+40% obrażeń karabinu, -20% prędkości pocisku.",
+		"cost": 40, "exclusive_with": []},
+	{"id": "karabin_explosive",   "weapon": "karabin", "name": "AMUNICJA WYBUCHOWA",
+		"desc": "+25% obrażeń bazowych. Każdy pocisk wybucha przy trafieniu (50% obrażeń w obszarze).",
+		"cost": 50, "exclusive_with": ["karabin_poison"]},
+	{"id": "karabin_poison",      "weapon": "karabin", "name": "ZATRUTE NABOJE",
+		"desc": "Trafienia nakładają zatrucie: 1 obr / sek przez 5 sek. Kolejne trafienia odświeżają.",
+		"cost": 50, "exclusive_with": ["karabin_explosive"]},
 	{"id": "laser_splitter",      "weapon": "laser",   "name": "DZIELNIK WIĄZKI",
 		"desc": "Dwie dodatkowe wiązki pod kątem ±45° (60% obrażeń każda).",
 		"cost": 45, "exclusive_with": ["laser_focused"]},
@@ -265,12 +277,23 @@ func _spawn_cards():
 func _spawn_upgrade_cards():
 	# A second row of weapon-upgrade cards. Filter to upgrades the player
 	# doesn't yet own and isn't blocked from owning by exclusivity.
+	# In endless mode, restrict further: only upgrades for pistol + the
+	# weapon the player picked at startup are shown (the only two weapons
+	# they own in that mode).
 	if _player == null or not "weapon_upgrades" in _player:
 		return
+	var allowed_weapons: Array = []
+	if endless_mode:
+		allowed_weapons = ["pistol"]
+		var chosen: String = GameState.endless_starting_weapon
+		if chosen != "" and not chosen in allowed_weapons:
+			allowed_weapons.append(chosen)
 	var owned: Array = _player.weapon_upgrades
 	var available: Array = []
 	for upg in WEAPON_UPGRADES:
 		if upg["id"] in owned:
+			continue
+		if not allowed_weapons.is_empty() and not upg["weapon"] in allowed_weapons:
 			continue
 		var blocked := false
 		for ex in upg.get("exclusive_with", []):
@@ -488,9 +511,13 @@ func _on_buy(item: Dictionary, btn: Button, cost_lbl: Label, actual_cost: int):
 	elif item.has("grenade_type"):
 		_player.add_grenade(item["grenade_type"], int(item.get("grenade_count", 1)))
 	else:
+		# Clamp to STAT_CAP so shop spam can't push past 99. Floor at 0 too
+		# (in case multiple negative-tradeoff items stack).
+		var stat_cap: int = int(_player.STAT_CAP) if "STAT_CAP" in _player else 99
 		for entry in item.get("stats", []):
 			var stat: String = entry[0]
-			_player.set(stat, _player.get(stat) + entry[1])
+			var new_value: int = clamp(int(_player.get(stat)) + int(entry[1]), 0, stat_cap)
+			_player.set(stat, new_value)
 			if _stat_labels.has(stat):
 				_stat_labels[stat].text = str(_player.get(stat))
 		if _player.has_method("recalculate_stats"):

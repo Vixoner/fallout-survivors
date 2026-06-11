@@ -21,6 +21,16 @@ class_name WeaponData extends Resource
 @export var dot_tick_damage: int = 8
 @export var dot_slow: float = 0.0             # Plasma Lepka: slow multiplier in AoE (0 = none, 0.5 = halve)
 
+# Karabin Amunicja Wybuchowa — eksplozja przy trafieniu z 50% obrażeń pocisku w obszarze.
+@export var explosive: bool = false
+@export var explosive_radius: float = 90.0
+@export var explosive_dmg_ratio: float = 0.5
+
+# Karabin Zatrute Naboje — DoT 1 obr/sek na trafionym celu, kolejne trafienia odświeżają.
+@export var poison: bool = false
+@export var poison_duration: float = 5.0
+@export var poison_tick_dmg: int = 1
+
 static func make_pistol() -> WeaponData:
 	var w := WeaponData.new()
 	w.name = "Pistol"
@@ -28,7 +38,19 @@ static func make_pistol() -> WeaponData:
 	w.fire_rate = 0.4
 	w.bullet_speed = 1350.0
 	w.bullet_scene = load("res://scenes/bullet.tscn")
-	w.fire_sound = load("res://assets/audio/weapons/pistol_fire.wav")
+	w.fire_sound = load("res://assets/audio/weapons/pistol_fire.mp3")
+	return w
+
+# Endless mode's slot-1 default. Functionally same as pistol but faster fire rate
+# and slightly more damage — it's the "starter weapon" you always have.
+static func make_karabin() -> WeaponData:
+	var w := WeaponData.new()
+	w.name = "Karabin"
+	w.damage = 14
+	w.fire_rate = 0.20
+	w.bullet_speed = 1450.0
+	w.bullet_scene = load("res://scenes/bullet.tscn")
+	w.fire_sound = load("res://assets/audio/weapons/karabin_fire.mp3")
 	return w
 
 static func make_laser() -> WeaponData:
@@ -39,7 +61,7 @@ static func make_laser() -> WeaponData:
 	w.is_beam = true
 	w.beam_length = 1050.0
 	w.beam_width = 52.0
-	w.fire_sound = load("res://assets/audio/weapons/laser_fire.wav")
+	w.fire_sound = load("res://assets/audio/weapons/laser_fire.mp3")
 	return w
 
 static func make_plasma() -> WeaponData:
@@ -49,7 +71,7 @@ static func make_plasma() -> WeaponData:
 	w.fire_rate = 1.1
 	w.bullet_speed = 520.0
 	w.bullet_scene = load("res://scenes/plasma_bolt.tscn")
-	w.fire_sound = load("res://assets/audio/weapons/plasma_fire.wav")
+	w.fire_sound = load("res://assets/audio/weapons/plasma_fire.mp3")
 	return w
 
 static func make_shotgun() -> WeaponData:
@@ -62,5 +84,5 @@ static func make_shotgun() -> WeaponData:
 	w.projectile_count = 10
 	w.spread_angle = 0.90     # ~32° cone 0.55
 	w.spread_random = true    # random scatter within the cone per shot
-	w.fire_sound = load("res://assets/audio/weapons/shotgun_fire.wav")
+	w.fire_sound = load("res://assets/audio/weapons/shotgun_fire.mp3")
 	return w
