@@ -17,12 +17,12 @@ var _elapsed: float = 0.0
 var _exploded: bool = false
 
 # Tunables, settable via setup() so future grenade variants can reuse this node.
-var damage: int = 110
+var damage: int = 150
 var radius: float = 180.0
 
 var _grenade_sprite: Node2D = null
 
-func setup(start_pos: Vector2, target_pos: Vector2, dmg: int = 110, rad: float = 180.0) -> void:
+func setup(start_pos: Vector2, target_pos: Vector2, dmg: int = 150, rad: float = 180.0) -> void:
 	_start = start_pos
 	_target = target_pos
 	damage = dmg

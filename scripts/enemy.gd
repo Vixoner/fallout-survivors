@@ -31,7 +31,10 @@ var _stuck_timer: float = 0.0
 var _stuck_nudge_side: float = 1.0
 
 @onready var sprite: Sprite2D = $BodySprite
-@onready var animation_player = $AnimationPlayer 
+@onready var animation_player = $AnimationPlayer
+# Ciemna obramówka wysuwana w dół — kopia sprita przesunięta niżej i przyciemniona,
+# rysowana za BodySprite, więc wystaje tylko u dołu. Nie każdy enemy ją ma.
+@onready var _outline: Sprite2D = get_node_or_null("Outline")
 
 func _ready():
 	z_index = 5
@@ -46,8 +49,17 @@ func _ready():
 	add_child(_nav_agent)
 	_last_position = global_position
 
+func _process(_delta):
+	# Synchronizuj obramówkę z aktualną klatką animacji sprita (jeśli enemy ją ma).
+	if _outline and is_instance_valid(sprite):
+		_outline.texture = sprite.texture
+		_outline.hframes = sprite.hframes
+		_outline.vframes = sprite.vframes
+		_outline.frame   = sprite.frame
+		_outline.flip_h  = sprite.flip_h
+
 func _physics_process(delta):
-	if is_dead: 
+	if is_dead:
 		return
 	
 	if player:
@@ -160,9 +172,13 @@ func flash_hit():
 	var mat = ShaderMaterial.new()
 	mat.shader = HIT_SHADER
 	sprite.material = mat
+	if _outline:
+		_outline.material = mat
 	await get_tree().create_timer(0.12).timeout
 	if is_instance_valid(sprite):
 		sprite.material = null
+	if is_instance_valid(_outline):
+		_outline.material = null
 
 func spawn_damage_number(amount: int, is_crit: bool = false):
 	var label = Label.new()

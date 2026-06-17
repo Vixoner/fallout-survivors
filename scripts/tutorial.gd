@@ -327,9 +327,9 @@ func _build_ui() -> void:
 	_panel.anchor_top    = 1.0
 	_panel.anchor_right  = 0.5
 	_panel.anchor_bottom = 1.0
-	_panel.offset_left   = -390
-	_panel.offset_right  =  390
-	_panel.offset_top    = -250
+	_panel.offset_left   = -510
+	_panel.offset_right  =  510
+	_panel.offset_top    = -340
 	_panel.offset_bottom = -82
 	root.add_child(_panel)
 
@@ -340,25 +340,25 @@ func _build_ui() -> void:
 	var hdr_row := HBoxContainer.new()
 	vbox.add_child(hdr_row)
 
-	var hdr := _label("// SAMOUCZEK //", 15, C_BRIGHT)
+	var hdr := _label("// SAMOUCZEK //", 19, C_BRIGHT)
 	hdr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hdr_row.add_child(hdr)
 
-	_step_label = _label("", 13, C_DIM)
+	_step_label = _label("", 16, C_DIM)
 	_step_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	hdr_row.add_child(_step_label)
 
 	vbox.add_child(_hsep())
 
-	_title_label = _label("", 19, C_BRIGHT)
+	_title_label = _label("", 24, C_BRIGHT)
 	vbox.add_child(_title_label)
 
-	_text_label = _label("", 14, C_MID)
+	_text_label = _label("", 18, C_MID)
 	_text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_text_label.custom_minimum_size = Vector2(720, 0)
+	_text_label.custom_minimum_size = Vector2(960, 0)
 	vbox.add_child(_text_label)
 
-	_wait_label = _label("", 13, C_DIM)
+	_wait_label = _label("", 16, C_DIM)
 	vbox.add_child(_wait_label)
 
 func _set_step(step: int, title: String, text: String) -> void:

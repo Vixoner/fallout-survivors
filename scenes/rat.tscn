@@ -141,6 +141,15 @@ caps_drop_min = 1
 caps_drop_max = 3
 side_only_animations = true
 
+[node name="Outline" type="Sprite2D" parent="." unique_id=890236300]
+self_modulate = Color(0.05, 0.05, 0.05, 0.85)
+position = Vector2(0, 2.5)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("2_3csnj")
+offset = Vector2(0, -10)
+hframes = 4
+vframes = 2
+
 [node name="BodySprite" type="Sprite2D" parent="." unique_id=890236336]
 scale = Vector2(1.5, 1.5)
 texture = ExtResource("2_3csnj")
